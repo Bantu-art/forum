@@ -2,7 +2,6 @@ package utils
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -127,8 +126,7 @@ func InitialiseDB() *sql.DB {
     );
 	`)
 	if err != nil {
-		fmt.Errorf("Failed to create sessions table: %v", err)
-		return nil
+		log.Fatalf("Failed to create sessions table: %v", err)
 	}
 
 	return db
