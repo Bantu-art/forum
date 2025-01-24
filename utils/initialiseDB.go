@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
+
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -120,6 +121,7 @@ func InitialiseDB() (*sql.DB, error) {
 	`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create reactions table: %v", err)
+
 	}
 
 	return db, nil
