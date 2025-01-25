@@ -11,7 +11,7 @@ type User struct {
 
 type Post struct {
 	ID       int
-	UserID   int
+	UserID   string
 	Title    string
 	Content  string
 	ImagePath string
@@ -39,6 +39,6 @@ type Category struct {
 
 type Session struct {
 	ID        string
-	UserID    int
+	UserID    string
 	ExpiresAt time.Time
 }

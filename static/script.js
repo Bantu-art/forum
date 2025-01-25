@@ -64,3 +64,34 @@ if (imageInput && imagePreview) {
 }
 
 // Form submission handling
+
+const createPostForm = document.getElementById('create-post-form');
+
+if (createPostForm) {
+    createPostForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        // For now, we'll just log it and redirect
+        console.log('Title:', formData.get('title'));
+        console.log('Description:', formData.get('description'));
+        console.log('Image:', formData.get('image'));
+        
+        alert('Post created successfully!');
+        
+        // Redirect to home page
+        window.location.href = 'index.html';
+    });
+}
+
+// show password
+document.getElementById('show-password').addEventListener('change', function() {
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    
+    // Toggle type between "password" and "text"
+    const type = this.checked ? 'text' : 'password';
+    passwordInput.type = type;
+    confirmPasswordInput.type = type;
+});

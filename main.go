@@ -6,24 +6,36 @@ import (
 	"net/http"
 
 	"forum/controllers"
+	"forum/handlers"
 	"forum/utils"
 )
 
 func main() {
-	db := utils.InitialiseDB()
-	if db != nil {
-		defer db.Close()
-	}
-	http.Handle("/", &controllers.PostHandler{})
-    postHandler := controllers.NewPostHandler()
-    http.Handle("/post/", postHandler)
-	http.Handle("/post", postHandler)
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
-	fmt.Println("Server opened at port 3000...http://localhost:3000/")
-
-	err := http.ListenAndServe(":3000", nil)
+	// Initialize database
+	db, err := utils.InitialiseDB()
 	if err != nil {
-		log.Println("Failed to ope server")
-		return
+		log.Fatalf("Database initialization failed: %v", err)
+	}
+	defer db.Close()
+
+	// Initialize handlers with database
+	handlers.InitDB(db)
+
+	// Setup routes
+	http.HandleFunc("/signup", handlers.SignUpHandler)
+	http.HandleFunc("/signin", handlers.SignInHandler)
+	// Add other route handlers...
+	//http.Handle("/", &controllers.PostHandler{})
+	postHandler := controllers.NewPostHandler()
+	http.Handle("/", postHandler)
+	//http.Handle("/post", postHandler)
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	fmt.Println("Server opened at port 3000...http://localhost:8000/")
+
+	// Start server
+
+	err = http.ListenAndServe(":8000", nil)
+	if err != nil {
+		log.Fatalf("Server failed to start: %v", err)
 	}
 }

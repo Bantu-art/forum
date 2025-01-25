@@ -24,34 +24,34 @@ func NewPostHandler() *PostHandler {
 
 // Update your ServeHTTP method to include the new route
 func (ph *PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-    path := r.URL.Path
-    if len(path) > 0 && path[len(path)-1] == '/' {
-        path = path[:len(path)-1]
-    }
+	path := r.URL.Path
+	// if len(path) > 0 && path[len(path)-1] == '/' {
+	// 	path = path[:len(path)-1]
+	// }
 
-    switch path {
-    case "/post/create":
-        if r.Method == http.MethodGet {
-            ph.displayCreateForm(w)
-        } else if r.Method == http.MethodPost {
-            ph.handleCreatePost(w, r)
-        } else {
-            http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-        }
-    case "/post":
-        if r.Method == http.MethodGet {
-            // Check if there's an ID parameter
-            if r.URL.Query().Get("id") != "" {
-                ph.handleSinglePost(w, r)
-            } else {
-                ph.handleGetPosts(w)
-            }
-        } else {
-            http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-        }
-    default:
-        http.NotFound(w, r)
-    }
+	switch path {
+	case "/create":
+		if r.Method == http.MethodGet {
+			ph.displayCreateForm(w)
+		} else if r.Method == http.MethodPost {
+			ph.handleCreatePost(w, r)
+		} else {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	case "/":
+		if r.Method == http.MethodGet {
+			// Check if there's an ID parameter
+			if r.URL.Query().Get("id") != "" {
+				ph.handleSinglePost(w, r)
+			} else {
+				ph.handleGetPosts(w)
+			}
+		} else {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	default:
+		http.NotFound(w, r)
+	}
 }
 
 // Add this new method to PostHandler
@@ -175,7 +175,18 @@ func (ph *PostHandler) handleCreatePost(w http.ResponseWriter, r *http.Request) 
 	defer stmt.Close()
 
 	// Execute the insert
-	const userID = 1 // TODO: Get from session
+	cookie, err := r.Cookie("session_token")
+    if err != nil {
+        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        return
+    }
+
+    // Validate session token and retrieve user ID
+    userID, err := utils.ValidateSession(utils.GlobalDB, cookie.Value)
+    if err != nil {
+        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        return
+    }
 	currentTime := time.Now()
 	result, err := stmt.Exec(userID, title, content, imagePath, currentTime)
 	if err != nil {
