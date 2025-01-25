@@ -83,3 +83,14 @@ if (createPostForm) {
         window.location.href = 'index.html';
     });
 }
+
+// show password
+document.getElementById('show-password').addEventListener('change', function() {
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    
+    // Toggle type between "password" and "text"
+    const type = this.checked ? 'text' : 'password';
+    passwordInput.type = type;
+    confirmPasswordInput.type = type;
+});

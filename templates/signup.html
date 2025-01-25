@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Sign Up</h1>
+        {{if .Errors.GeneralError}}
+        <div class="general-error">
+            {{.Errors.GeneralError}}
+        </div>
+        {{end}}
+        <form action="/signup" method="POST">
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" name="username" id="username" value="{{.UserName}}" {{if .Errors.UsernameError}}class="error"{{end}}>
+                {{if .Errors.UsernameError}}
+                <div class="error-message">{{.Errors.UsernameError}}</div>
+                {{end}}
+            </div>
+
+            <div class="input-group">
+                <label for="email">Email</label>
+                <input type="email" name="email" id="email" value="{{.Email}}" {{if .Errors.EmailError}}class="error"{{end}}>
+                {{if .Errors.EmailError}}
+                <div class="error-message">{{.Errors.EmailError}}</div>
+                {{end}}
+            </div>
+
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" name="password" id="password" {{if .Errors.PasswordError}}class="error"{{end}}>
+                {{if .Errors.PasswordError}}
+                <div class="error-message">{{.Errors.PasswordError}}</div>
+                {{end}}
+            </div>
+
+            <div class="input-group">
+                <label for="confirm-password">Confirm Password</label>
+                <input type="password" name="confirm-password" id="confirm-password" {{if .Errors.PasswordError}}class="error"{{end}}>
+            </div>
+
+            <div class="show-password-group">
+                <input type="checkbox" id="show-password">
+                <label for="show-password">Show password</label>
+            </div>
+
+            <button type="submit">Sign Up</button>
+        </form>
+        <div style="text-align: center; margin-top: 15px;">
+            <a href="/signin">Already have an account? Sign in</a>
+        </div>
+    </div>
+    <script src="../static/script.js"></script>
+</body>
+</html>

@@ -2,17 +2,18 @@ package utils
 
 import (
 	"database/sql"
-	"log"
+	"fmt"
+
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
 var GlobalDB *sql.DB
 
-func InitialiseDB() *sql.DB {
+func InitialiseDB() (*sql.DB, error) {
 	db, err := sql.Open("sqlite3", "./forum.db")
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	GlobalDB = db
@@ -20,7 +21,7 @@ func InitialiseDB() *sql.DB {
 	// Create Users table
 	_, err = db.Exec(`
         CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id TEXT PRIMARY KEY NOT NULL,
             email TEXT UNIQUE,
             username TEXT UNIQUE,
             password TEXT
@@ -29,14 +30,13 @@ func InitialiseDB() *sql.DB {
     	CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
     `)
 	if err != nil {
-		log.Printf("Failed to create users table: %v", err)
-		return nil
+		return nil, fmt.Errorf("failed to create users table: %v", err)
 	}
 
 	_, err = db.Exec(`
         CREATE TABLE IF NOT EXISTS posts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
+		user_id TEXT,
         title TEXT NOT NULL,
         content TEXT NOT NULL,
         post_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -49,8 +49,7 @@ func InitialiseDB() *sql.DB {
     CREATE INDEX IF NOT EXISTS idx_posts_post_at ON posts(post_at);
     `)
 	if err != nil {
-		log.Printf("Failed to create posts table: %v", err)
-		return nil
+		return nil, fmt.Errorf("failed to create posts table: %v", err)
 	}
 
 	_, err = db.Exec(`
@@ -69,8 +68,7 @@ func InitialiseDB() *sql.DB {
     CREATE INDEX IF NOT EXISTS idx_comments_user_id ON comments(user_id);
 	`)
 	if err != nil {
-		log.Printf("Failed to create comments table: %v", err)
-		return nil
+		return nil, fmt.Errorf("failed to create comments table: %v", err)
 	}
 
 	_, err = db.Exec(`
@@ -80,8 +78,7 @@ func InitialiseDB() *sql.DB {
     );
 	`)
 	if err != nil {
-		log.Printf("Failed to create categories table: %v", err)
-		return nil
+		return nil, fmt.Errorf("failed to create categories table: %v", err)
 	}
 
 	_, err = db.Exec(`
@@ -95,10 +92,8 @@ func InitialiseDB() *sql.DB {
     CREATE INDEX IF NOT EXISTS idx_post_categories_category_id ON post_categories(category_id);
 	`)
 	if err != nil {
-		log.Printf("Failed to create post_categories table: %v", err)
-		return nil
+		return nil, fmt.Errorf("failed to create post_categories table: %v", err)
 	}
-
 	_, err = db.Exec(`
 	CREATE TABLE IF NOT EXISTS sessions (
         id TEXT PRIMARY KEY,
@@ -110,8 +105,7 @@ func InitialiseDB() *sql.DB {
     CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at);
 	`)
 	if err != nil {
-		log.Printf("Failed to create sessions table: %v", err)
-		return nil
+		return nil, fmt.Errorf("failed to create sessions table: %v", err)
 	}
 
 	_, err = db.Exec(`
@@ -126,8 +120,9 @@ func InitialiseDB() *sql.DB {
     );
 	`)
 	if err != nil {
-		log.Fatalf("Failed to create sessions table: %v", err)
+		return nil, fmt.Errorf("failed to create reactions table: %v", err)
+
 	}
 
-	return db
+	return db, nil
 }
