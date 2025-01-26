@@ -33,7 +33,7 @@ func CreateSession(db *sql.DB, userID string) (string, error) {
 func DeleteExpiredSessions(db *sql.DB) (int64, error) {
 	result, err := db.Exec(
 		`DELETE FROM sessions
-		WHERE expires_at = ?
+		WHERE expires_at < ?
 		`, time.Now())
 	if err != nil {
 		return 0, err
