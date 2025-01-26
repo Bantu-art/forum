@@ -1,8 +1,10 @@
 package utils
 
 import (
+	"context"
 	"database/sql"
 	"encoding/base64"
+	"log"
 	"time"
 
 	"golang.org/x/exp/rand"
@@ -43,4 +45,26 @@ func DeleteExpiredSessions(db *sql.DB) (int64, error) {
 	}
 
 	return deletedSession, nil
+}
+
+// StartSessionCleanup starts a background goroutine to clean up expired sessions at regular intervals.
+func StartSessionsCLeanUp(ctx context.Context, db *sql.DB, interval time.Duration) {
+	go func() {
+		ticker := time.NewTicker(interval) // run clean up at specified interval
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ticker.C:
+				rowsAffected, err := DeleteExpiredSessions(db)
+				if err != nil {
+					log.Printf("Failed to clean up sessions: %v", err)
+				} else if rowsAffected > 0 {
+					log.Printf("Cleaned up %d expired session", rowsAffected)
+				}
+			case <- ctx.Done():
+				log.Println("Stopping session cleanup routine")
+			}
+		}
+	}()
 }
