@@ -17,16 +17,41 @@ func GenerateSessionToken() string {
 }
 
 func CreateSession(db *sql.DB, userID string) (string, error) {
+	// Delete any existing session for the user
+	result, err := db.Exec(`
+		DELETE FROM sessions
+		WHERE user_id = ?
+	`, userID)
+	if err != nil {
+		return "", err
+	}
+
+	// Log the number of sessions deleted
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return "", err
+	}
+
+	if rowsAffected < 1 {
+		log.Printf("No sessions found")
+	} else {
+		log.Printf("Deleted %d existing sessions for user %s", rowsAffected, userID)
+	}
+
+	// Generate a new session token
 	SessionToken := GenerateSessionToken()
 	ExpiresAt := time.Now().Add(24 * time.Hour)
-	_, err := GlobalDB.Exec(`
-	INSERT INTO sessions(id, user_id, expires_at)
-	VALUES (?, ?, ?)
+
+	// Insert the new session
+	_, err = db.Exec(`
+		INSERT INTO sessions(id, user_id, expires_at)
+		VALUES (?, ?, ?)
 	`, SessionToken, userID, ExpiresAt)
 	if err != nil {
 		return "", err
 	}
 
+	log.Printf("Created new session for user %s", userID)
 	return SessionToken, nil
 }
 
