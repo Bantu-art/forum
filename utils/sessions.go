@@ -50,7 +50,7 @@ func DeleteExpiredSessions(db *sql.DB) (int64, error) {
 // StartSessionCleanup starts a background goroutine to clean up expired sessions at regular intervals.
 func StartSessionsCLeanUp(ctx context.Context, db *sql.DB, interval time.Duration) {
 	go func() {
-		ticker := time.NewTicker(interval) // run clean up at specified interval
+		ticker := time.NewTicker(interval) // run cleanup at the specified interval
 		defer ticker.Stop()
 
 		for {
@@ -58,12 +58,13 @@ func StartSessionsCLeanUp(ctx context.Context, db *sql.DB, interval time.Duratio
 			case <-ticker.C:
 				rowsAffected, err := DeleteExpiredSessions(db)
 				if err != nil {
-					log.Printf("Failed to clean up sessions: %v", err)
+					log.Printf("Failed to clean up expired sessions: %v", err)
 				} else if rowsAffected > 0 {
-					log.Printf("Cleaned up %d expired session", rowsAffected)
+					log.Printf("Cleaned up %d expired sessions", rowsAffected)
 				}
-			case <- ctx.Done():
-				log.Println("Stopping session cleanup routine")
+			case <-ctx.Done():
+				log.Println("Stopping session cleanup goroutine")
+				return
 			}
 		}
 	}()
