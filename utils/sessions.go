@@ -27,3 +27,20 @@ func CreateSession(db *sql.DB, userID string) (string, error) {
 
 	return SessionToken, nil
 }
+
+func DeleteExpiredSessions(db *sql.DB) (int64, error) {
+	result, err := db.Exec(
+		`DELETE FROM sessions
+		WHERE expires_at = ?
+		`, time.Now())
+	if err != nil {
+		return 0, err
+	}
+
+	deletedSession, err := result.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+
+	return deletedSession, nil
+}
