@@ -36,7 +36,7 @@ func InitialiseDB() (*sql.DB, error) {
 	_, err = db.Exec(`
         CREATE TABLE IF NOT EXISTS posts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-		user_id TEXT,
+		user_id TEXT NOT NULL,
         title TEXT NOT NULL,
         content TEXT NOT NULL,
         post_at DATETIME DEFAULT CURRENT_TIMESTAMP,
