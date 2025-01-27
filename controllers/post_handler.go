@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"html/template"
@@ -22,40 +23,54 @@ func NewPostHandler() *PostHandler {
 	}
 }
 
-// Update your ServeHTTP method to include the new route
-func (ph *PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	path := r.URL.Path
-	// if len(path) > 0 && path[len(path)-1] == '/' {
-	// 	path = path[:len(path)-1]
-	// }
+// Update handler signatures to match http.HandlerFunc
+func (ph *PostHandler) authMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("session_token")
+		if (err != nil) {
+			http.Redirect(w, r, "/signin", http.StatusSeeOther)
+			return
+		}
 
-	switch path {
+		userID, err := utils.ValidateSession(utils.GlobalDB, cookie.Value)
+		if err != nil {
+			http.Redirect(w, r, "/signin", http.StatusSeeOther)
+			return
+		}
+
+		// Store userID in request context
+		ctx := context.WithValue(r.Context(), "userID", userID)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	}
+}
+
+// Update ServeHTTP method
+func (ph *PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	switch r.URL.Path {
 	case "/create":
-		if r.Method == http.MethodGet {
-			ph.displayCreateForm(w)
-		} else if r.Method == http.MethodPost {
-			ph.handleCreatePost(w, r)
-		} else {
+		switch r.Method {
+		case http.MethodGet:
+			ph.authMiddleware(ph.displayCreateForm).ServeHTTP(w, r)
+		case http.MethodPost:
+			ph.authMiddleware(ph.handleCreatePost).ServeHTTP(w, r)
+		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	case "/":
 		if r.Method == http.MethodGet {
-			// Check if there's an ID parameter
 			if r.URL.Query().Get("id") != "" {
-				ph.handleSinglePost(w, r)
+				ph.handleSinglePost(w, r) // Public access allowed
 			} else {
-				ph.handleGetPosts(w)
+				ph.handleGetPosts(w) // Public access allowed
 			}
-		} else {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	default:
 		http.NotFound(w, r)
 	}
 }
 
-// Add this new method to PostHandler
-func (ph *PostHandler) displayCreateForm(w http.ResponseWriter) {
+// Update handler signatures to match http.HandlerFunc
+func (ph *PostHandler) displayCreateForm(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.ParseFiles("templates/createpost.html")
 	if err != nil {
 		log.Printf("Error parsing create form template: %v", err)
@@ -126,11 +141,17 @@ func (ph *PostHandler) getAllPosts() ([]utils.Post, error) {
 	return posts, rows.Err()
 }
 
-// Update your handleCreatePost method
+// Update handleCreatePost method
 func (ph *PostHandler) handleCreatePost(w http.ResponseWriter, r *http.Request) {
-	// Increase max memory for file uploads
+	// Get userID from context
+	userID := r.Context().Value("userID").(string)
+	if userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
-		log.Printf("Error parsing multipart form: %v", err)
+		log.Printf("Error parsing form: %v", err)
 		http.Error(w, "Error processing form", http.StatusBadRequest)
 		return
 	}
@@ -175,18 +196,6 @@ func (ph *PostHandler) handleCreatePost(w http.ResponseWriter, r *http.Request) 
 	defer stmt.Close()
 
 	// Execute the insert
-	cookie, err := r.Cookie("session_token")
-    if err != nil {
-        http.Error(w, "Unauthorized", http.StatusUnauthorized)
-        return
-    }
-
-    // Validate session token and retrieve user ID
-    userID, err := utils.ValidateSession(utils.GlobalDB, cookie.Value)
-    if err != nil {
-        http.Error(w, "Unauthorized", http.StatusUnauthorized)
-        return
-    }
 	currentTime := time.Now()
 	result, err := stmt.Exec(userID, title, content, imagePath, currentTime)
 	if err != nil {
@@ -198,7 +207,7 @@ func (ph *PostHandler) handleCreatePost(w http.ResponseWriter, r *http.Request) 
 	postID, _ := result.LastInsertId()
 	log.Printf("Successfully created post with ID: %d", postID)
 
-	http.Redirect(w, r, "/post", http.StatusSeeOther)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func FormatTimeAgo(t time.Time) string {
