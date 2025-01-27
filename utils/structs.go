@@ -11,7 +11,7 @@ type User struct {
 
 type Post struct {
 	ID       int
-	UserID   int
+	UserID   string
 	Title    string
 	Content  string
 	PostTime time.Time
@@ -23,7 +23,7 @@ type Post struct {
 type Comment struct {
 	ID          int
 	PostID      int
-	UserID      int
+	UserID      string
 	Content     string
 	CommentTime time.Time
 	Likes       int
