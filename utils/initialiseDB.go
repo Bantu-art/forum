@@ -55,7 +55,7 @@ func InitialiseDB() (*sql.DB, error) {
 	_, err = db.Exec(`
 	CREATE TABLE IF NOT EXISTS comments (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        post_id INTEGER,
+        post_id TEXT NOT NULL,
         user_id TEXT NOT NULL,
         content TEXT NOT NULL,
         comment_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -73,7 +73,7 @@ func InitialiseDB() (*sql.DB, error) {
 
 	_, err = db.Exec(`
 	CREATE TABLE IF NOT EXISTS categories (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id TEXT NOT NULL,
         name TEXT UNIQUE NOT NULL
     );
 	`)
@@ -83,8 +83,8 @@ func InitialiseDB() (*sql.DB, error) {
 
 	_, err = db.Exec(`
 	CREATE TABLE IF NOT EXISTS post_categories (
-        post_id INTEGER,
-        category_id INTEGER,
+        post_id TEXT NOT NULL,
+        category_id TEXT NOT NULL,
         PRIMARY KEY (post_id, category_id),
         FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
         FOREIGN KEY (category_id) REFERENCES categories(id)
@@ -111,7 +111,7 @@ func InitialiseDB() (*sql.DB, error) {
 	_, err = db.Exec(`
 	CREATE TABLE IF NOT EXISTS reaction (
         user_id TEXT NOT NULL,
-        post_id INTEGER,
+        post_id TEXT NOT NULL,
         like INTEGER,
 		dislike INTEGER,
         PRIMARY KEY (user_id, post_id),
