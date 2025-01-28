@@ -3,7 +3,6 @@ package handlers
 import (
 	"database/sql"
 	"html/template"
-	"log"
 	"net/http"
 	"time"
 
@@ -73,24 +72,7 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Check for existing active session
-		hasSession, err := utils.HasActiveSession(GlobalDB, user.ID)
-		if err != nil {
-			log.Printf("Error checking session: %v", err)
-			data.GeneralError = "An error occurred. Please try again later."
-			data.Username = username
-			tmpl.Execute(w, data)
-			return
-		}
-
-		if hasSession {
-			data.GeneralError = "User already logged in on another device"
-			data.Username = username
-			tmpl.Execute(w, data)
-			return
-		}
-
-		// Create new session
+		// Create new session (this will delete any existing session)
 		sessionToken, err := utils.CreateSession(GlobalDB, user.ID)
 		if err != nil {
 			data.GeneralError = "An error occurred. Please try again later."

@@ -21,31 +21,14 @@ func GenerateSessionToken() string {
 	return base64.URLEncoding.EncodeToString(b)
 }
 
-
-
-func HasActiveSession(db *sql.DB, userID string) (bool, error) {
-    var exists bool
-    err := db.QueryRow(`
-        SELECT EXISTS(
-            SELECT 1 FROM sessions 
-            WHERE user_id = ? AND expires_at > ?
-        )
-    `, userID, time.Now()).Scan(&exists)
-    
-    if err != nil {
-        return false, fmt.Errorf("error checking session: %v", err)
-    }
-    return exists, nil
-}
-
 func CreateSession(db *sql.DB, userID string) (string, error) {
-    // Check for active session first
-    hasSession, err := HasActiveSession(db, userID)
+    // Delete any existing session for the user
+    _, err := db.Exec(`
+        DELETE FROM sessions
+        WHERE user_id = ?
+    `, userID)
     if err != nil {
-        return "", err
-    }
-    if hasSession {
-        return "", ErrActiveSession
+        return "", fmt.Errorf("failed to delete existing session: %v", err)
     }
 
     // Generate new session
