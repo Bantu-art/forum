@@ -64,6 +64,7 @@ if (imageInput && imagePreview) {
 }
 
 // Form submission handling
+
 const createPostForm = document.getElementById('create-post-form');
 
 if (createPostForm) {

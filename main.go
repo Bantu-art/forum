@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"forum/controllers"
 	"forum/handlers"
 	"forum/utils"
 )
@@ -21,24 +22,21 @@ func main() {
 
 	// Initialize handlers with database
 	handlers.InitDB(db)
-
-	//start session cleanup
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel() // ensure the go routine is stoppend when the application exists
-
-	//set interval  and start the cleanup session
-	cleanUpInterval := 1 * time.Second
-	utils.StartSessionsCLeanUp(ctx, db, cleanUpInterval)
-
+	utils.InitSessionManager(utils.GlobalDB)
 	// Setup routes
 	http.HandleFunc("/signup", handlers.SignUpHandler)
 	http.HandleFunc("/signin", handlers.SignInHandler)
 	// Add other route handlers...
+	//http.Handle("/", &controllers.PostHandler{})
+	postHandler := controllers.NewPostHandler()
+	http.Handle("/", postHandler)
+	//http.Handle("/post", postHandler)
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	fmt.Println("Server opened at port 3000...http://localhost:8000/")
 
 	// Start server
-	port := ":8080"
-	fmt.Printf("Server starting on %s...\n", port)
-	err = http.ListenAndServe(port, nil)
+
+	err = http.ListenAndServe(":8000", nil)
 	if err != nil {
 		log.Fatalf("Server failed to start: %v", err)
 	}

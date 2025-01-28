@@ -317,3 +317,128 @@ body {
         width: 100%;
     }
 }
+
+/* single post */
+.single-post-container {
+    max-width: 800px;
+    margin: 20px auto;
+    background: var(--background-color);
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.post-main-content {
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.post-image-container {
+    margin: 15px 0;
+}
+
+.post-image-container img {
+    max-width: 100%;
+    border-radius: 8px;
+}
+
+.post-actions {
+    display: flex;
+    gap: 20px;
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.comments-section {
+    max-height: 500px;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.comment-form {
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.comment-input {
+    width: 100%;
+    min-height: 80px;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    resize: vertical;
+}
+
+.comment-card {
+    padding: 15px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    gap: 12px;
+}
+
+.comment-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--avatar-bg);
+}
+
+.comment-content {
+    flex: 1;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.comment-username {
+    font-weight: bold;
+}
+
+.comment-time {
+    color: var(--text-muted);
+    font-size: 0.9em;
+}
+
+.back-button {
+    margin: 20px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* index */
+.post-card {
+    cursor: pointer;
+    position: relative;
+}
+
+.post-link {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
+    color: inherit;
+    z-index: 1;
+}
+
+.post-footer {
+    position: relative;
+    z-index: 2;
+}
+
+.action-btn {
+    position: relative;
+    z-index: 2;
+    cursor: pointer;
+}

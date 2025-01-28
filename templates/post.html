@@ -1,17 +1,24 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Post - Forum</title>
+    <title>{{.Title}} - Forum</title>
     <link rel="stylesheet" href="../static/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
 </head>
+
 <body>
+    <!-- Reuse the same navbar from index.html -->
     <nav class="navbar">
         <div class="nav-container">
             <h1 class="logo">Forum</h1>
             <div class="nav-right">
+                <button id="create-post-btn" class="btn btn-primary" onclick="window.location.href='/post/create'">
+                    <i class="fas fa-plus"></i> Create Post
+                </button>
                 <button id="theme-toggle" class="theme-toggle">
                     <i class="fas fa-moon"></i>
                 </button>
@@ -22,37 +29,66 @@
     </nav>
 
     <main class="main-content">
-        <div class="create-post-container">
-            <h2>Create New Post</h2>
-            <form id="create-post-form" class="create-post-form">
-                <div class="form-group">
-                    <label for="post-title">Title</label>
-                    <input type="text" id="post-title" name="title" required placeholder="Enter your post title">
-                </div>
-
-                <div class="form-group">
-                    <label for="post-description">Description</label>
-                    <textarea id="post-description" name="description" required placeholder="Write your post content here"></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="post-image">Image (optional)</label>
-                    <div class="image-upload-container">
-                        <input type="file" id="post-image" name="image" accept="image/*">
-                        <div class="image-preview" id="image-preview">
-                            <i class="fas fa-image"></i>
-                            <p>Click to upload image</p>
-                        </div>
+        <button class="back-button" onclick="window.location.href='/'">
+            <i class="fas fa-arrow-left"></i> Back
+        </button>
+        
+        <div class="single-post-container">
+            <div class="post-main-content">
+                <div class="post-header">
+                    <div class="avatar"></div>
+                    <div class="post-info">
+                        <h2>{{.Title}}</h2>
+                        <span class="timestamp">{{.PostTime}}</span>
                     </div>
                 </div>
-
-                <div class="form-actions">
-                    <button type="button" class="btn btn-outline" onclick="window.location.href='index.html'">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create Post</button>
+                
+                <p>{{.Content}}</p>
+                
+                {{if .ImagePath}}
+                <div class="post-image-container">
+                    <img src="{{.ImagePath}}" alt="Post image">
                 </div>
-            </form>
+                {{end}}
+            </div>
+
+            <div class="post-actions">
+                <button class="action-btn like-btn">
+                    <i class="fas fa-heart"></i>
+                    <span class="count">{{.Likes}}</span>
+                </button>
+                <button class="action-btn dislike-btn">
+                    <i class="fas fa-thumbs-down"></i>
+                    <span class="count">{{.Dislikes}}</span>
+                </button>
+                <button class="action-btn comment-btn">
+                    <i class="fas fa-comment"></i>
+                    <span class="count">{{.Comments}}</span>
+                </button>
+            </div>
+
+            <div class="comment-form">
+                <textarea class="comment-input" placeholder="Write a comment..."></textarea>
+                <button class="btn btn-primary">Post Comment</button>
+            </div>
+
+            <div class="comments-section">
+                {{range .CommentsList}}
+                <div class="comment-card">
+                    <div class="comment-avatar"></div>
+                    <div class="comment-content">
+                        <div class="comment-header">
+                            <span class="comment-username">Username</span>
+                            <span class="comment-time">{{.CommentTime}}</span>
+                        </div>
+                        <p>{{.Content}}</p>
+                    </div>
+                </div>
+                {{end}}
+            </div>
         </div>
     </main>
-    <script src="../static/script.js"></script>
+
+    <!-- <script src="../static/script.js"></script> -->
 </body>
 </html>

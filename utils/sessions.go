@@ -4,10 +4,15 @@ import (
 	"context"
 	"database/sql"
 	"encoding/base64"
+	"fmt"
 	"log"
 	"time"
 
 	"golang.org/x/exp/rand"
+)
+var (
+    ErrActiveSession = fmt.Errorf("user already has an active session")
+    ErrNoSession    = fmt.Errorf("no active session found")
 )
 
 func GenerateSessionToken() string {
@@ -17,65 +22,66 @@ func GenerateSessionToken() string {
 }
 
 func CreateSession(db *sql.DB, userID string) (string, error) {
-	// Delete any existing session for the user
-	result, err := db.Exec(`
-		DELETE FROM sessions
-		WHERE user_id = ?
-	`, userID)
+    // Delete any existing session for the user
+    _, err := db.Exec(`
+        DELETE FROM sessions
+        WHERE user_id = ?
+    `, userID)
+    if err != nil {
+        return "", fmt.Errorf("failed to delete existing session: %v", err)
+    }
+
+    // Generate new session
+    SessionToken := GenerateSessionToken()
+    ExpiresAt := time.Now().Add(24 * time.Hour)
+
+    // Create new session
+    _, err = db.Exec(`
+        INSERT INTO sessions(id, user_id, expires_at)
+        VALUES (?, ?, ?)
+    `, SessionToken, userID, ExpiresAt)
+    if err != nil {
+        return "", fmt.Errorf("failed to create session: %v", err)
+    }
+
+    log.Printf("Created new session for user %s", userID)
+    return SessionToken, nil
+}
+
+func ValidateSession(db *sql.DB, sessionToken string) (string, error) {
+	var userID string
+	err := db.QueryRow(`
+		SELECT user_id FROM sessions 
+		WHERE id = ? AND expires_at > ?
+	`, sessionToken, time.Now()).Scan(&userID)
 	if err != nil {
-		return "", err
+		if err == sql.ErrNoRows {
+			return "", fmt.Errorf("session expired or invalid")
+		}
+		return "", fmt.Errorf("error validating session: %v", err)
 	}
-
-	// Log the number of sessions deleted
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return "", err
-	}
-
-	if rowsAffected < 1 {
-		log.Printf("No sessions found")
-	} else {
-		log.Printf("Deleted %d existing sessions for user %s", rowsAffected, userID)
-	}
-
-	// Generate a new session token
-	SessionToken := GenerateSessionToken()
-	ExpiresAt := time.Now().Add(24 * time.Hour)
-
-	// Insert the new session
-	_, err = db.Exec(`
-		INSERT INTO sessions(id, user_id, expires_at)
-		VALUES (?, ?, ?)
-	`, SessionToken, userID, ExpiresAt)
-	if err != nil {
-		return "", err
-	}
-
-	log.Printf("Created new session for user %s", userID)
-	return SessionToken, nil
+	return userID, nil
 }
 
 func DeleteExpiredSessions(db *sql.DB) (int64, error) {
-	result, err := db.Exec(
-		`DELETE FROM sessions
+	result, err := db.Exec(`
+		DELETE FROM sessions
 		WHERE expires_at < ?
-		`, time.Now())
+	`, time.Now())
 	if err != nil {
 		return 0, err
 	}
 
-	deletedSession, err := result.RowsAffected()
+	deletedSessions, err := result.RowsAffected()
 	if err != nil {
 		return 0, err
 	}
-
-	return deletedSession, nil
+	return deletedSessions, nil
 }
 
-// StartSessionCleanup starts a background goroutine to clean up expired sessions at regular intervals.
 func StartSessionsCLeanUp(ctx context.Context, db *sql.DB, interval time.Duration) {
 	go func() {
-		ticker := time.NewTicker(interval) // run cleanup at the specified interval
+		ticker := time.NewTicker(interval)
 		defer ticker.Stop()
 
 		for {
@@ -93,4 +99,10 @@ func StartSessionsCLeanUp(ctx context.Context, db *sql.DB, interval time.Duratio
 			}
 		}
 	}()
+}
+
+func InitSessionManager(db *sql.DB) {
+	ctx := context.Background()
+	interval := 1 * time.Hour
+	StartSessionsCLeanUp(ctx, db, interval)
 }
