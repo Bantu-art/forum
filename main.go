@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"forum/handlers"
 	"forum/utils"
@@ -19,6 +21,14 @@ func main() {
 
 	// Initialize handlers with database
 	handlers.InitDB(db)
+
+	//start session cleanup
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // ensure the go routine is stoppend when the application exists
+
+	//set interval  and start the cleanup session
+	cleanUpInterval := 1 * time.Second
+	utils.StartSessionsCLeanUp(ctx, db, cleanUpInterval)
 
 	// Setup routes
 	http.HandleFunc("/signup", handlers.SignUpHandler)

@@ -11,13 +11,14 @@ type User struct {
 
 type Post struct {
 	ID       int
-	UserID   int
+	UserID   string
 	Title    string
 	Content  string
-	PostTime time.Time
+	ImagePath string
+	PostTime string
 	Likes    int
 	Dislikes int
-	Comments int
+	Comments int	
 }
 
 type Comment struct {
@@ -37,6 +38,6 @@ type Category struct {
 
 type Session struct {
 	ID        string
-	UserID    int
+	UserID    string
 	ExpiresAt time.Time
 }

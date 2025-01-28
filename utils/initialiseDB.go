@@ -39,6 +39,7 @@ func InitialiseDB() (*sql.DB, error) {
 		user_id TEXT,
         title TEXT NOT NULL,
         content TEXT NOT NULL,
+		imagepath TEXT,
         post_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         likes INTEGER DEFAULT 0,
 		dislikes INTEGER DEFAULT 0,
@@ -56,7 +57,7 @@ func InitialiseDB() (*sql.DB, error) {
 	CREATE TABLE IF NOT EXISTS comments (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         post_id INTEGER,
-        user_id INTEGER,
+        user_id TEXT,
         content TEXT NOT NULL,
         comment_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         likes INTEGER DEFAULT 0,
@@ -97,7 +98,7 @@ func InitialiseDB() (*sql.DB, error) {
 	_, err = db.Exec(`
 	CREATE TABLE IF NOT EXISTS sessions (
         id TEXT PRIMARY KEY,
-        user_id INTEGER,
+        user_id TEXT,
         expires_at DATETIME,
         FOREIGN KEY (user_id) REFERENCES users(id)
     );
