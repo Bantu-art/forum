@@ -10,20 +10,21 @@ type User struct {
 }
 
 type Post struct {
-	ID       string
+	ID       int
 	UserID   string
 	Title    string
 	Content  string
-	PostTime time.Time
+	ImagePath string
+	PostTime string
 	Likes    int
 	Dislikes int
-	Comments int
+	Comments int	
 }
 
 type Comment struct {
-	ID          string
-	PostID      string
-	UserID      string
+	ID          int
+	PostID      int
+	UserID      int
 	Content     string
 	CommentTime time.Time
 	Likes       int
@@ -31,7 +32,7 @@ type Comment struct {
 }
 
 type Category struct {
-	ID   string
+	ID   int
 	Name string
 }
 
