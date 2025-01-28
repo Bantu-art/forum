@@ -36,9 +36,10 @@ func InitialiseDB() (*sql.DB, error) {
 	_, err = db.Exec(`
         CREATE TABLE IF NOT EXISTS posts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-		user_id TEXT NOT NULL,
+		user_id TEXT,
         title TEXT NOT NULL,
         content TEXT NOT NULL,
+		imagepath TEXT,
         post_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         likes INTEGER DEFAULT 0,
 		dislikes INTEGER DEFAULT 0,
@@ -55,8 +56,8 @@ func InitialiseDB() (*sql.DB, error) {
 	_, err = db.Exec(`
 	CREATE TABLE IF NOT EXISTS comments (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        post_id TEXT NOT NULL,
-        user_id TEXT NOT NULL,
+        post_id INTEGER,
+        user_id TEXT,
         content TEXT NOT NULL,
         comment_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         likes INTEGER DEFAULT 0,
@@ -73,7 +74,7 @@ func InitialiseDB() (*sql.DB, error) {
 
 	_, err = db.Exec(`
 	CREATE TABLE IF NOT EXISTS categories (
-        id TEXT NOT NULL,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT UNIQUE NOT NULL
     );
 	`)
@@ -83,8 +84,8 @@ func InitialiseDB() (*sql.DB, error) {
 
 	_, err = db.Exec(`
 	CREATE TABLE IF NOT EXISTS post_categories (
-        post_id TEXT NOT NULL,
-        category_id TEXT NOT NULL,
+        post_id INTEGER,
+        category_id INTEGER,
         PRIMARY KEY (post_id, category_id),
         FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
         FOREIGN KEY (category_id) REFERENCES categories(id)
@@ -97,7 +98,7 @@ func InitialiseDB() (*sql.DB, error) {
 	_, err = db.Exec(`
 	CREATE TABLE IF NOT EXISTS sessions (
         id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
+        user_id TEXT,
         expires_at DATETIME,
         FOREIGN KEY (user_id) REFERENCES users(id)
     );
@@ -110,8 +111,8 @@ func InitialiseDB() (*sql.DB, error) {
 
 	_, err = db.Exec(`
 	CREATE TABLE IF NOT EXISTS reaction (
-        user_id TEXT NOT NULL,
-        post_id TEXT NOT NULL,
+        user_id INTEGER,
+        post_id INTEGER,
         like INTEGER,
 		dislike INTEGER,
         PRIMARY KEY (user_id, post_id),
