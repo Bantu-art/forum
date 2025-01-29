@@ -111,7 +111,7 @@ func InitialiseDB() (*sql.DB, error) {
 
 	_, err = db.Exec(`
 	CREATE TABLE IF NOT EXISTS reaction (
-        user_id INTEGER,
+        user_id TEXT,
         post_id INTEGER,
         like INTEGER,
 		dislike INTEGER,
