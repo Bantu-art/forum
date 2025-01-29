@@ -1,53 +1,44 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
-	"forum/middleware"
 	"log"
 	"net/http"
 
-	_ "github.com/go-sql-driver/mysql"
+	"forum/controllers"
+	"forum/handlers"
+	"forum/utils"
 )
 
 func main() {
-	// Initialize the database connection
-	db, err := sql.Open("mysql", "user:password@tcp(localhost:3306)/dbname")
+	// Initialize database
+	db, err := utils.InitialiseDB()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Database initialization failed: %v", err)
 	}
 	defer db.Close()
 
-	// Create your HTTP handlers
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Welcome to the home page!")
-	})
+	// Initialize handlers with database
+	handlers.InitDB(db)
+	utils.InitSessionManager(utils.GlobalDB)
+	// Setup routes
+	http.HandleFunc("/signup", handlers.SignUpHandler)
+	http.HandleFunc("/signin", handlers.SignInHandler)
+	http.HandleFunc("/signout", handlers.SignOutHandler(db))
+	// Add other route handlers...
+	// http.Handle("/", &controllers.PostHandler{})
+	postHandler := controllers.NewPostHandler()
+	http.Handle("/", postHandler)
+	profileHandler := controllers.NewProfileHandler()
+	http.Handle("/profile", profileHandler)
+	// http.Handle("/post", postHandler)
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	fmt.Println("Server opened at port 8000...http://localhost:8000/")
 
-	http.HandleFunc("/dashboard", func(w http.ResponseWriter, r *http.Request) {
-		session, ok := middleware.GetSession(r.Context())
-		if !ok {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-		fmt.Fprintf(w, "Welcome to your dashboard, user %d!", session.UserID)
-	})
+	// Start server
 
-	// Apply the middleware to your handlers
-	http.Handle("/dashboard", middleware.AuthMiddleware(db)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session, ok := middleware.GetSession(r.Context())
-		if !ok {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-		fmt.Fprintf(w, "Welcome to your dashboard, user %d!", session.UserID)
-	})))
-
-	// Apply logging middleware
-	http.Handle("/", middleware.LoggingMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Welcome to the home page!")
-	})))
-
-	// Start the HTTP server
-	log.Println("Starting server on :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	err = http.ListenAndServe(":8000", nil)
+	if err != nil {
+		log.Fatalf("Server failed to start: %v", err)
+	}
 }
