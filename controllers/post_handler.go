@@ -27,7 +27,7 @@ func NewPostHandler() *PostHandler {
 func (ph *PostHandler) authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("session_token")
-		if (err != nil) {
+		if err != nil {
 			http.Redirect(w, r, "/signin", http.StatusSeeOther)
 			return
 		}
@@ -61,7 +61,7 @@ func (ph *PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Query().Get("id") != "" {
 				ph.handleSinglePost(w, r) // Public access allowed
 			} else {
-				ph.handleGetPosts(w) // Public access allowed
+				ph.handleGetPosts(w, r) // Public access allowed
 			}
 		}
 	default:
@@ -84,12 +84,17 @@ func (ph *PostHandler) displayCreateForm(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func (ph *PostHandler) handleGetPosts(w http.ResponseWriter) {
+func (ph *PostHandler) handleGetPosts(w http.ResponseWriter, r *http.Request) {
 	posts, err := ph.getAllPosts()
 	if err != nil {
 		log.Printf("Error fetching posts: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
+	}
+
+	pageData := utils.PageData{
+		IsLoggedIn: ph.checkAuthStatus(r),
+		Posts:      posts,
 	}
 
 	tmpl, err := template.ParseFiles("templates/index.html")
@@ -99,7 +104,7 @@ func (ph *PostHandler) handleGetPosts(w http.ResponseWriter) {
 		return
 	}
 
-	if err := tmpl.Execute(w, posts); err != nil {
+	if err := tmpl.Execute(w, pageData); err != nil {
 		log.Printf("Error executing template: %v", err)
 		http.Error(w, "Error loading template", http.StatusInternalServerError)
 	}
@@ -322,4 +327,13 @@ func (ph *PostHandler) getPostByID(id int64) (*utils.Post, error) {
 
 	post.PostTime = FormatTimeAgo(postTime)
 	return &post, nil
+}
+
+func (ph *PostHandler) checkAuthStatus(r *http.Request) bool {
+	cookie, err := r.Cookie("session_token")
+	if err != nil {
+		return false
+	}
+	_, err = utils.ValidateSession(utils.GlobalDB, cookie.Value)
+	return err == nil
 }
