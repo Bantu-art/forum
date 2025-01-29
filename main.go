@@ -25,10 +25,12 @@ func main() {
 	http.HandleFunc("/signup", handlers.SignUpHandler)
 	http.HandleFunc("/signin", handlers.SignInHandler)
 	// Add other route handlers...
-	//http.Handle("/", &controllers.PostHandler{})
+	// http.Handle("/", &controllers.PostHandler{})
 	postHandler := controllers.NewPostHandler()
 	http.Handle("/", postHandler)
-	//http.Handle("/post", postHandler)
+	profileHandler := controllers.NewProfileHandler()
+	http.Handle("/profile", profileHandler)
+	// http.Handle("/post", postHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	fmt.Println("Server opened at port 3000...http://localhost:8000/")
 

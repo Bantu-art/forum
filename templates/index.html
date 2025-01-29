@@ -46,9 +46,17 @@
             <div class="post-card">
                 <a href="/?id={{.ID}}" class="post-link"></a>
                 <div class="post-header">
-                    <div class="avatar"></div>
+                    <div class="post-avatar">
+                        {{if .ProfilePic.Valid}}
+                            <img src="{{.ProfilePic.String}}" alt="Profile Picture" class="post-avatar-img">
+                        {{else}}
+                            <div class="post-avatar-placeholder">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        {{end}}
+                    </div>
                     <div class="post-info">
-                        <h3>{{.Title}}</h3>
+                        <h3>{{.Username}}</h3>
                         <span class="timestamp">{{.PostTime}}</span>
                     </div>
                 </div>

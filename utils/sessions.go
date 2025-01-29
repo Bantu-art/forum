@@ -8,7 +8,7 @@ import (
 	"log"
 	"time"
 
-	"golang.org/x/exp/rand"
+	"crypto/rand"
 )
 var (
     ErrActiveSession = fmt.Errorf("user already has an active session")

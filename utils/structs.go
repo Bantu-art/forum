@@ -1,25 +1,30 @@
 package utils
 
-import "time"
+import (
+	"database/sql"
+	"time"
+)
 
 type User struct {
-	ID       string
-	UserName string
-	Email    string
-	Password string
+	ID         string
+	UserName   string
+	Email      string
+	Password   string
+	ProfilePic sql.NullString
 }
 
 type Post struct {
-	ID       int
-	UserID   string
-	Title    string
-	Content  string
-	ImagePath string
-	PostTime string
-	Likes    int
-	Dislikes int
-	Comments int
-	
+    ID         int
+    UserID     string
+    Title      string
+    Content    string
+    ImagePath  string
+    PostTime   string
+    Likes      int
+    Dislikes   int
+    Comments   int
+    Username   string
+    ProfilePic sql.NullString
 }
 
 type Comment struct {
@@ -44,6 +49,6 @@ type Session struct {
 }
 
 type PageData struct {
-    IsLoggedIn bool
-    Posts      []Post
+	IsLoggedIn bool
+	Posts      []Post
 }
