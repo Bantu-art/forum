@@ -42,3 +42,8 @@ type Session struct {
 	UserID    string
 	ExpiresAt time.Time
 }
+
+type PageData struct {
+    IsLoggedIn bool
+    Posts      []Post
+}
