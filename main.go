@@ -26,7 +26,7 @@ func main() {
 	http.HandleFunc("/signin", handlers.SignInHandler)
 	// Add other route handlers...
 	// http.Handle("/", &controllers.PostHandler{})
-	http.HandleFunc("createdpost", controllers.CreatedPost)
+	http.HandleFunc("templates/createdpost", controllers.CreatedPost)
 
 	postHandler := controllers.NewPostHandler()
 	http.Handle("/", postHandler)
