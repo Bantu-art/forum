@@ -28,6 +28,8 @@ func main() {
 	// http.Handle("/", &controllers.PostHandler{})
 	postHandler := controllers.NewPostHandler()
 	http.Handle("/", postHandler)
+	profileHandler := controllers.NewProfileHandler()
+	http.Handle("/profile", profileHandler)
 	// http.Handle("/post", postHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	fmt.Println("Server opened at port 3000...http://localhost:8000/")

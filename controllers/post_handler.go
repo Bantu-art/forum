@@ -111,39 +111,44 @@ func (ph *PostHandler) handleGetPosts(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ph *PostHandler) getAllPosts() ([]utils.Post, error) {
-	rows, err := utils.GlobalDB.Query(`
-        SELECT id, user_id, title, content,imagepath, post_at, likes, dislikes, comments 
-        FROM posts 
-        ORDER BY post_at DESC
+    rows, err := utils.GlobalDB.Query(`
+        SELECT p.id, p.user_id, p.title, p.content, p.imagepath, 
+               p.post_at, p.likes, p.dislikes, p.comments,
+               u.username, u.profile_pic
+        FROM posts p
+        JOIN users u ON p.user_id = u.id
+        ORDER BY p.post_at DESC
     `)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
 
-	var posts []utils.Post
-	for rows.Next() {
-		var post utils.Post
-		var postTime time.Time
-		if err := rows.Scan(
-			&post.ID,
-			&post.UserID,
-			&post.Title,
-			&post.Content,
-			&post.ImagePath,
-			&postTime,
-			&post.Likes,
-			&post.Dislikes,
-			&post.Comments,
-		); err != nil {
-			log.Printf("Error scanning post: %v", err)
-			continue
-		}
-		post.PostTime = FormatTimeAgo(postTime)
-		posts = append(posts, post)
-	}
+    var posts []utils.Post
+    for rows.Next() {
+        var post utils.Post
+        var postTime time.Time
+        if err := rows.Scan(
+            &post.ID,
+            &post.UserID,
+            &post.Title,
+            &post.Content,
+            &post.ImagePath,
+            &postTime,
+            &post.Likes,
+            &post.Dislikes,
+            &post.Comments,
+            &post.Username,
+            &post.ProfilePic,
+        ); err != nil {
+            log.Printf("Error scanning post: %v", err)
+            continue
+        }
+        post.PostTime = FormatTimeAgo(postTime)
+        posts = append(posts, post)
+    }
 
-	return posts, rows.Err()
+    return posts, rows.Err()
 }
 
 // Update handleCreatePost method
@@ -297,36 +302,41 @@ func (ph *PostHandler) handleSinglePost(w http.ResponseWriter, r *http.Request) 
 
 // Add this helper method to fetch a single post
 func (ph *PostHandler) getPostByID(id int64) (*utils.Post, error) {
-	row := utils.GlobalDB.QueryRow(`
-        SELECT id, user_id, title, content, imagepath, post_at, likes, dislikes, comments 
-        FROM posts 
-        WHERE id = ?
+    row := utils.GlobalDB.QueryRow(`
+        SELECT p.id, p.user_id, p.title, p.content, p.imagepath, 
+               p.post_at, p.likes, p.dislikes, p.comments,
+               u.username, u.profile_pic
+        FROM posts p
+        JOIN users u ON p.user_id = u.id
+        WHERE p.id = ?
     `, id)
 
-	var post utils.Post
-	var postTime time.Time
+    var post utils.Post
+    var postTime time.Time
 
-	err := row.Scan(
-		&post.ID,
-		&post.UserID,
-		&post.Title,
-		&post.Content,
-		&post.ImagePath,
-		&postTime,
-		&post.Likes,
-		&post.Dislikes,
-		&post.Comments,
-	)
+    err := row.Scan(
+        &post.ID,
+        &post.UserID,
+        &post.Title,
+        &post.Content,
+        &post.ImagePath,
+        &postTime,
+        &post.Likes,
+        &post.Dislikes,
+        &post.Comments,
+        &post.Username,
+        &post.ProfilePic,
+    )
 
-	if err == sql.ErrNoRows {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, err
-	}
+    if err == sql.ErrNoRows {
+        return nil, nil
+    }
+    if err != nil {
+        return nil, err
+    }
 
-	post.PostTime = FormatTimeAgo(postTime)
-	return &post, nil
+    post.PostTime = FormatTimeAgo(postTime)
+    return &post, nil
 }
 
 func (ph *PostHandler) checkAuthStatus(r *http.Request) bool {

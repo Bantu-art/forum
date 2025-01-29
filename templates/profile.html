@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Forum</title>
+    <link rel="stylesheet" href="../static/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1 class="logo">Forum</h1>
+            <div class="nav-right">
+                <button id="theme-toggle" class="theme-toggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button class="btn btn-primary" onclick="window.location.href='/'">
+                    <i class="fas fa-home"></i> Home
+                </button>
+                <button class="btn btn-primary" onclick="window.location.href='/logout'">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">PROFILE</h1>
+        </div>
+        <div class="profile-container">
+            <div class="profile-header">
+                <div class="profile-pic-section">
+                    {{if .ProfilePic.Valid}}
+                        <img src="{{.ProfilePic.String}}" alt="Profile Picture" class="profile-pic">
+                    {{else}}
+                        <div class="profile-pic-placeholder">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    {{end}}
+                </div>
+                <div class="profile-info">
+                    <h1 class="profile-name">{{.Username}}</h1>
+                    <p class="profile-email">{{.Email}}</p>
+                </div>
+            </div>
+
+            <div class="profile-actions">
+                <form id="profile-pic-form" action="/profile" method="POST" enctype="multipart/form-data">
+                    <label for="profile_pic" class="change-photo-link">
+                        Change photo
+                    </label>
+                    <input type="file" id="profile_pic" name="profile_pic" accept="image/*" style="display: none">
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Auto-submit form when file is selected
+        document.getElementById('profile_pic').addEventListener('change', function() {
+            document.getElementById('profile-pic-form').submit();
+        });
+    </script>
+    <script src="../static/script.js"></script>
+</body>
+</html>
