@@ -349,7 +349,7 @@ func (ph *PostHandler) checkAuthStatus(r *http.Request) bool {
 }
 
 func CreatedPost(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFiles("templates/createdpost")
+	tmpl, err := template.ParseFiles("templates/createdpost.html")
 	if err != nil {
 		http.Error(w, "Unable to load page", http.StatusInternalServerError)
 		return
