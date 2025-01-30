@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign In</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <div class="container">
@@ -36,12 +36,29 @@
                 {{.GeneralError}}
             </div>
             {{end}}
+            <div class="show-password-group">
+                <input type="checkbox" id="show-password">
+                <label for="show-password">Show password</label>
+            </div>
 
             <button type="submit">Sign In</button>
         </form>
-        <div class="signup-link">
+        <div class="sign-link">
             <a href="/signup">Create an account</a>
         </div>
     </div>
+    <script>
+        document.getElementById('show-password').addEventListener('change', function() {
+            var passwordField = document.getElementById('password');
+            var confirmPasswordField = document.getElementById('confirm-password');
+            if (this.checked) {
+                passwordField.type = 'text';
+                confirmPasswordField.type = 'text';
+            } else {
+                passwordField.type = 'password';
+                confirmPasswordField.type = 'password';
+            }
+        });
+    </script>
 </body>
 </html>
