@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up</title>
-    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
-<body class="sign-body">
-    <div class="sign-container">
+<body>
+    <div class="container">
         <h1>Sign Up</h1>
         {{if .Errors.GeneralError}}
         <div class="general-error">
@@ -15,7 +15,7 @@
         </div>
         {{end}}
         <form action="/signup" method="POST">
-            <div class="form-group">
+            <div class="input-group">
                 <label for="username">Username</label>
                 <input type="text" name="username" id="username" value="{{.UserName}}" {{if .Errors.UsernameError}}class="error"{{end}}>
                 {{if .Errors.UsernameError}}
@@ -23,7 +23,7 @@
                 {{end}}
             </div>
 
-            <div class="form-group">
+            <div class="input-group">
                 <label for="email">Email</label>
                 <input type="email" name="email" id="email" value="{{.Email}}" {{if .Errors.EmailError}}class="error"{{end}}>
                 {{if .Errors.EmailError}}
@@ -31,7 +31,7 @@
                 {{end}}
             </div>
 
-            <div class="form-group">
+            <div class="input-group">
                 <label for="password">Password</label>
                 <input type="password" name="password" id="password" {{if .Errors.PasswordError}}class="error"{{end}}>
                 {{if .Errors.PasswordError}}
@@ -39,7 +39,7 @@
                 {{end}}
             </div>
 
-            <div class="form-group">
+            <div class="input-group">
                 <label for="confirm-password">Confirm Password</label>
                 <input type="password" name="confirm-password" id="confirm-password" {{if .Errors.PasswordError}}class="error"{{end}}>
             </div>
@@ -51,23 +51,10 @@
 
             <button type="submit">Sign Up</button>
         </form>
-        <div class="sign-link">
+        <div style="text-align: center; margin-top: 15px;">
             <a href="/signin">Already have an account? Sign in</a>
         </div>
     </div>
     <script src="../static/script.js"></script>
-    <script>
-        document.getElementById('show-password').addEventListener('change', function() {
-            var passwordField = document.getElementById('password');
-            var confirmPasswordField = document.getElementById('confirm-password');
-            if (this.checked) {
-                passwordField.type = 'text';
-                confirmPasswordField.type = 'text';
-            } else {
-                passwordField.type = 'password';
-                confirmPasswordField.type = 'password';
-            }
-        });
-    </script>
 </body>
 </html>
