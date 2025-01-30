@@ -38,11 +38,8 @@ func (ph *PostHandler) authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		// Define a custom type for context keys
-		type contextKey string
-
 		// Store userID in request context
-		ctx := context.WithValue(r.Context(), contextKey("userID"), userID)
+		ctx := context.WithValue(r.Context(), "userID", userID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 }
@@ -98,6 +95,7 @@ func (ph *PostHandler) displayCreateForm(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "Error loading template", http.StatusInternalServerError)
 	}
 }
+
 func (ph *PostHandler) getAllCategories() ([]utils.Category, error) {
 	rows, err := utils.GlobalDB.Query("SELECT id, name FROM categories")
 	if err != nil {
@@ -164,6 +162,9 @@ func (ph *PostHandler) getAllPosts() ([]utils.Post, error) {
 	for rows.Next() {
 		var post utils.Post
 		var postTime time.Time
+		var categoryID sql.NullInt64
+		var categoryName sql.NullString
+
 		if err := rows.Scan(
 			&post.ID,
 			&post.UserID,
@@ -176,12 +177,26 @@ func (ph *PostHandler) getAllPosts() ([]utils.Post, error) {
 			&post.Comments,
 			&post.Username,
 			&post.ProfilePic,
-			&post.CategoryID,
-			&post.CategoryName,
+			&categoryID,
+			&categoryName,
 		); err != nil {
 			log.Printf("Error scanning post: %v", err)
 			continue
 		}
+
+		if categoryID.Valid {
+			categoryIDInt := int(categoryID.Int64)
+			post.CategoryID = &categoryIDInt
+		} else {
+			post.CategoryID = nil
+		}
+
+		if categoryName.Valid {
+			post.CategoryName = &categoryName.String
+		} else {
+			post.CategoryName = nil
+		}
+
 		post.PostTime = FormatTimeAgo(postTime)
 		posts = append(posts, post)
 	}
@@ -206,8 +221,11 @@ func (ph *PostHandler) handleCreatePost(w http.ResponseWriter, r *http.Request) 
 
 	// Get form values
 	title := r.FormValue("title")
+	fmt.Println(title)
 	content := r.FormValue("content")
-	categoryID := r.FormValue("category")
+	fmt.Println(content)
+	categoryID := r.FormValue("categories")
+	fmt.Println(categoryID)
 
 	if title == "" || content == "" || categoryID == "" {
 		log.Printf("Title, content, and category are required")
