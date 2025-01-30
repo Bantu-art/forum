@@ -25,8 +25,8 @@ type Post struct {
 	Comments     int
 	Username     string
 	ProfilePic   sql.NullString
-	CategoryID   int
-	CategoryName string
+	CategoryID   *int
+	CategoryName *string
 }
 
 type Comment struct {
