@@ -49,7 +49,6 @@ func CreateSession(db *sql.DB, userID string) (string, error) {
 }
 
 func ValidateSession(db *sql.DB, sessionToken string) (string, error) {
-	log.Printf("Validating session: %s", sessionToken) // Debug log
 
 	var userID string
 	err := db.QueryRow(`

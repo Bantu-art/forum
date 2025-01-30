@@ -1,56 +1,48 @@
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.action-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const postId = this.getAttribute('data-post-id');
-            const action = this.getAttribute('data-action');
-            handleReaction(postId, action);
-        });
-    });
-});
+function handleReaction(event) {
+    const button = event.currentTarget;
+    const postID = button.getAttribute("data-post-id");
+    const action = button.getAttribute("data-action"); // "like" or "dislike"
 
-function handleReaction(postId, action) {
-    const sessionToken = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('session_token='))
-        ?.split('=')[1];
+    // Determine the reaction type (1 for like, 0 for dislike)
+    const like = action === "like" ? 1 : 0;
 
-    console.log("Attempting reaction:", { postId, action, sessionToken });
-
-    if (!sessionToken) {
-        window.location.href = '/signin';
-        return;
-    }
-
-    fetch('/react', {
-        method: 'POST',
+    // Send a POST request to the /react endpoint
+    fetch("/react", {
+        method: "POST",
         headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
+            "Content-Type": "application/json",
         },
         body: JSON.stringify({
-            post_id: parseInt(postId),
-            reaction_type: action
+            post_id: parseInt(postID), // Ensure postID is an integer
+            like: like,
         }),
-        credentials: 'include'
     })
-    .then(async res => {
-        if (!res.ok) {
-            const text = await res.text();
-            console.error('Response:', text);
-            throw new Error(`HTTP error! status: ${res.status}`);
+    .then(response => {
+        if (!response.ok) {
+            // If the response is not OK, parse the error message
+            return response.json().then(errorData => {
+                throw new Error(errorData.error || "An error occurred");
+            });
         }
-        return res.json();
+        return response.json();
     })
     .then(data => {
-        console.log("Reaction response:", data);
-        if (data.error) {
-            throw new Error(data.error);
+        // Update the like and dislike counts in the UI
+        const likesElement = document.getElementById(`likes-${postID}`);
+        const dislikesElement = document.getElementById(`dislikes-${postID}`);
+
+        if (likesElement && dislikesElement) {
+            likesElement.textContent = data.likes;
+            dislikesElement.textContent = data.dislikes;
         }
-        document.querySelector(`#likes-${postId}`).textContent = data.likes;
-        document.querySelector(`#dislikes-${postId}`).textContent = data.dislikes;
     })
     .catch(error => {
-        console.error('Error:', error);
-        alert('Failed to update reaction');
+        console.error("Error:", error);
+        alert(error.message); // Show the error message to the user
     });
 }
+
+// Add event listeners to all like/dislike buttons
+document.querySelectorAll(".like-btn, .dislike-btn").forEach(button => {
+    button.addEventListener("click", handleReaction);
+});

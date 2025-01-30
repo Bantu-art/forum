@@ -28,10 +28,6 @@ func main() {
 	// http.Handle("/", &controllers.PostHandler{})
 	postHandler := controllers.NewPostHandler()
 	http.Handle("/", postHandler)
-    http.HandleFunc("/react", postHandler.HandleReaction) // Changed to HandleFunc
-
-
-	//http.HandleFunc("/react", postHandler.HandleReaction)	// Add other route handlers...
 
 	profileHandler := controllers.NewProfileHandler()
 	http.Handle("/profile", profileHandler)
