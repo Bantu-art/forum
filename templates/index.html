@@ -40,50 +40,75 @@
         </div>
     </nav>
 
-    <main class="main-content">
-        <div class="posts-container">
-            {{range .Posts}}
-            <div class="post-card">
-                <a href="/?id={{.ID}}" class="post-link"></a>
-                <div class="post-header">
-                    <div class="post-avatar">
-                        {{if .ProfilePic.Valid}}
-                            <img src="{{.ProfilePic.String}}" alt="Profile Picture" class="post-avatar-img">
-                        {{else}}
-                            <div class="post-avatar-placeholder">
-                                <i class="fas fa-user"></i>
-                            </div>
+    <div class="main-wrapper">
+        <aside class="sidebar">
+            <h3>Categories</h3>
+            <ul class="category-list">
+                <li><a href="/category/Tech">Tech</a></li>
+                <li><a href="/category/Programming">Programming</a></li>
+                <li><a href="/category/Business">Business</a></li>
+                <li><a href="/category/Lifestyle">Lifestyle</a></li>
+                <li><a href="/category/Personal%20development">Personal development</a></li>
+                <li><a href="/category/Football">Football</a></li>
+                <li><a href="/category/Politics">Politics</a></li>
+                <li><a href="/category/General%20News">General News</a></li>
+            </ul>
+            {{if .IsLoggedIn}}
+                <h3>My Posts</h3>
+                <ul id="my-posts-list">
+                    {{range .UserPosts}}
+                        <li><a href="/?id={{.ID}}">{{.Title}}</a></li>
+                    {{end}}
+                </ul>
+            {{end}}
+        </aside>
+        
+
+        <main class="main-content">
+            <div class="posts-container">
+                {{range .Posts}}
+                <div class="post-card">
+                    <a href="/?id={{.ID}}" class="post-link"></a>
+                    <div class="post-header">
+                        <div class="post-avatar">
+                            {{if .ProfilePic.Valid}}
+                                <img src="{{.ProfilePic.String}}" alt="Profile Picture" class="post-avatar-img">
+                            {{else}}
+                                <div class="post-avatar-placeholder">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            {{end}}
+                        </div>
+                        <div class="post-info">
+                            <h3>{{.Username}}</h3>
+                            <span class="timestamp">{{.PostTime}}</span>
+                        </div>
+                    </div>
+                    <div class="post-content">
+                        <p>{{.Content}}</p>
+                        {{if .ImagePath}}
+                        <img src="{{.ImagePath}}" alt="Post image" class="post-image">
                         {{end}}
                     </div>
-                    <div class="post-info">
-                        <h3>{{.Username}}</h3>
-                        <span class="timestamp">{{.PostTime}}</span>
+                    <div class="post-footer">
+                        <button class="action-btn like-btn" onclick="event.stopPropagation();">
+                            <i class="fas fa-heart"></i>
+                            <span class="count">{{.Likes}}</span>
+                        </button>
+                        <button class="action-btn dislike-btn" onclick="event.stopPropagation();">
+                            <i class="fas fa-thumbs-down"></i>
+                            <span class="count">{{.Dislikes}}</span>
+                        </button>
+                        <button class="action-btn comment-btn" onclick="event.stopPropagation();">
+                            <i class="fas fa-comment"></i>
+                            <span class="count">{{.Comments}}</span>
+                        </button>
                     </div>
                 </div>
-                <div class="post-content">
-                    <p>{{.Content}}</p>
-                    {{if .ImagePath}}
-                    <img src="{{.ImagePath}}" alt="Post image" class="post-image">
-                    {{end}}
-                </div>
-                <div class="post-footer">
-                    <button class="action-btn like-btn" onclick="event.stopPropagation();">
-                        <i class="fas fa-heart"></i>
-                        <span class="count">{{.Likes}}</span>
-                    </button>
-                    <button class="action-btn dislike-btn" onclick="event.stopPropagation();">
-                        <i class="fas fa-thumbs-down"></i>
-                        <span class="count">{{.Dislikes}}</span>
-                    </button>
-                    <button class="action-btn comment-btn" onclick="event.stopPropagation();">
-                        <i class="fas fa-comment"></i>
-                        <span class="count">{{.Comments}}</span>
-                    </button>
-                </div>
+                {{end}}
             </div>
-            {{end}}
-        </div>
-    </main>
+        </main>
+    </div>
 
     <script src="../static/script.js"></script>
 </body>
