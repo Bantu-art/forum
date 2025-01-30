@@ -44,23 +44,15 @@
         <aside class="sidebar">
             <h3>Categories</h3>
             <ul class="category-list">
-                <li><a href="/category/Tech">Tech</a></li>
-                <li><a href="/category/Programming">Programming</a></li>
-                <li><a href="/category/Business">Business</a></li>
-                <li><a href="/category/Lifestyle">Lifestyle</a></li>
-                <li><a href="/category/Personal%20development">Personal development</a></li>
-                <li><a href="/category/Football">Football</a></li>
-                <li><a href="/category/Politics">Politics</a></li>
-                <li><a href="/category/General%20News">General News</a></li>
+                <li><a href="/category?name=Tech">Tech</a></li>
+                <li><a href="/category?name=Programming">Programming</a></li>
+                <li><a href="/category?name=Business">Business</a></li>
+                <li><a href="/category?name=Lifestyle">Lifestyle</a></li>
+                <li><a href="/category?name=Personal%20development">Personal development</a></li>
+                <li><a href="/category?name=Football">Football</a></li>
+                <li><a href="/category?name=Politics">Politics</a></li>
+                <li><a href="/category?name=General%20News">General News</a></li>
             </ul>
-            {{if .IsLoggedIn}}
-                <h3>My Posts</h3>
-                <ul id="my-posts-list">
-                    {{range .UserPosts}}
-                        <li><a href="/?id={{.ID}}">{{.Title}}</a></li>
-                    {{end}}
-                </ul>
-            {{end}}
         </aside>
         
 
