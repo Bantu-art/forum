@@ -219,6 +219,47 @@ body {
 .count {
     font-size: 0.875rem;
 }
+.sidebar {
+    width: 200px; 
+    padding: 20px;
+    background-color: #f7f7f7; 
+    border-right: 1px solid #ddd; 
+    position: fixed; 
+    height: 100vh; 
+    overflow-y: auto;
+}
+
+.sidebar h3 {
+    margin-top: 0; 
+    color: #333; 
+}
+
+.category-list, #my-posts-list {
+    list-style: none; 
+    padding: 0;
+    margin: 0; 
+}
+
+.category-list li, #my-posts-list li {
+    padding: 5px; 
+    border-bottom: 1px solid #ddd;
+}
+
+.category-list li a, #my-posts-list li a {
+    text-decoration: none;
+    color: #337ab7;
+}
+
+.category-list li a:hover, #my-posts-list li a:hover {
+    color: #23527c;
+}
+
+.sidebar .tagline {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 20px;
+}
+
 
 /* Responsive design */
 @media (max-width: 640px) {
