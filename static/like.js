@@ -1,6 +1,6 @@
 function handleReaction(event) {
     const button = event.currentTarget;
-    const postID = button.getAttribute("data-post-id");
+    const postID = button.getAttribute("data-post-id"); // Get post_id from the button
     const action = button.getAttribute("data-action"); // "like" or "dislike"
 
     // Determine the reaction type (1 for like, 0 for dislike)

@@ -266,45 +266,65 @@ func FormatTimeAgo(t time.Time) string {
 }
 
 func (ph *PostHandler) handleSinglePost(w http.ResponseWriter, r *http.Request) {
-	// Get post ID from URL query parameter
-	postIDStr := r.URL.Query().Get("id")
-	if postIDStr == "" {
-		http.Error(w, "Post ID is required", http.StatusBadRequest)
-		return
-	}
+    
+    postIDStr := r.URL.Query().Get("id")
+    
+    if postIDStr == "" {
+        http.Error(w, "Post ID is required", http.StatusBadRequest)
+        return
+    }
 
-	postID, err := strconv.ParseInt(postIDStr, 10, 64)
-	if err != nil {
-		http.Error(w, "Invalid post ID", http.StatusBadRequest)
-		return
-	}
+    postID, err := strconv.ParseInt(postIDStr, 10, 64)
+    if err != nil {
+        log.Printf("Invalid post ID: %v", err)
+        http.Error(w, "Invalid post ID", http.StatusBadRequest)
+        return
+    }
 
-	// Get post from database
-	post, err := ph.getPostByID(postID)
-	if err != nil {
-		log.Printf("Error fetching post: %v", err)
-		http.Error(w, "Error fetching post", http.StatusInternalServerError)
-		return
-	}
+    // Get user ID if logged in
+    var userID string
+    if cookie, err := r.Cookie("session_token"); err == nil {
+        userID, _ = utils.ValidateSession(utils.GlobalDB, cookie.Value)
+    }
 
-	// If post not found
-	if post == nil {
-		http.Error(w, "Post not found", http.StatusNotFound)
-		return
-	}
+    post, err := ph.getPostByID(postID)
+    if err != nil {
+        log.Printf("Error fetching post: %v", err)
+        http.Error(w, "Error fetching post", http.StatusInternalServerError)
+        return
+    }
 
-	// Parse and execute template
+    if post == nil {
+        log.Printf("Post not found: %d", postID)
+        http.Error(w, "Post not found", http.StatusNotFound)
+        return
+    }
+
+    // Add user's reaction if logged in
+    if userID != "" {
+        var reaction int
+        err := utils.GlobalDB.QueryRow(
+            "SELECT like FROM reaction WHERE user_id = ? AND post_id = ?", 
+            userID, postID,
+        ).Scan(&reaction)
+        if err != sql.ErrNoRows {
+            post.UserReaction = &reaction
+        }
+    }
+
+
 	tmpl, err := template.ParseFiles("templates/post.html")
-	if err != nil {
-		log.Printf("Error parsing template: %v", err)
-		http.Error(w, "Error loading template", http.StatusInternalServerError)
-		return
-	}
+    if err != nil {
+        log.Printf("Template parsing error: %v", err)
+        http.Error(w, "Internal server error", http.StatusInternalServerError)
+        return
+    }
 
-	if err := tmpl.Execute(w, post); err != nil {
-		log.Printf("Error executing template: %v", err)
-		http.Error(w, "Error loading template", http.StatusInternalServerError)
-	}
+    if err := tmpl.Execute(w, post); err != nil {
+        log.Printf("Template execution error: %v", err)
+        // Don't write header here since Execute might have already written response
+        log.Printf("Error rendering template: %v", err)
+    }
 }
 
 // Add this helper method to fetch a single post
