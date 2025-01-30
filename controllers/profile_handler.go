@@ -45,22 +45,22 @@ func (ph *ProfileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ph.displayProfile(w, r, userID)
+	ph.displayProfile(w, userID)
 }
 
-func (ph *ProfileHandler) displayProfile(w http.ResponseWriter, r *http.Request, userID string) {
+func (ph *ProfileHandler) displayProfile(w http.ResponseWriter, userID string) {
 	var profile ProfileData
-    err := utils.GlobalDB.QueryRow(`
+	err := utils.GlobalDB.QueryRow(`
         SELECT username, email, COALESCE(profile_pic, '') as profile_pic 
         FROM users 
         WHERE id = ?
     `, userID).Scan(&profile.Username, &profile.Email, &profile.ProfilePic)
 
-    if err != nil {
-        log.Printf("Error fetching profile: %v", err)
-        http.Error(w, "Error loading profile", http.StatusInternalServerError)
-        return
-    }
+	if err != nil {
+		log.Printf("Error fetching profile: %v", err)
+		http.Error(w, "Error loading profile", http.StatusInternalServerError)
+		return
+	}
 
 	profile.IsLoggedIn = true
 
