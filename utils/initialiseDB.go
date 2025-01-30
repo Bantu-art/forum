@@ -44,6 +44,8 @@ func InitialiseDB() (*sql.DB, error) {
         likes INTEGER DEFAULT 0,
 		dislikes INTEGER DEFAULT 0,
 		comments INTEGER DEFAULT 0,
+				userreaction INTEGER,
+
         FOREIGN KEY (user_id) REFERENCES users(id)
     );
     CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts(user_id);
@@ -111,18 +113,30 @@ func InitialiseDB() (*sql.DB, error) {
 
 	_, err = db.Exec(`
 	CREATE TABLE IF NOT EXISTS reaction (
-        user_id TEXT,
-        post_id INTEGER,
-        like INTEGER,
-		dislike INTEGER,
-        PRIMARY KEY (user_id, post_id),
-        FOREIGN KEY (user_id) REFERENCES users(id),
-        FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        post_id INTEGER NOT NULL,
+        like INTEGER NOT NULL CHECK (like IN (0, 1)), -- 1 for like, 0 for dislike
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+        UNIQUE(user_id, post_id) -- Prevent multiple reactions from same user
     );
+    CREATE INDEX IF NOT EXISTS idx_reaction_post_id ON reaction(post_id);
+    CREATE INDEX IF NOT EXISTS idx_reaction_user_id ON reaction(user_id);
 	`)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create reactions table: %v", err)
+		return nil, fmt.Errorf("failed to create reaction table: %v", err)
 	}
+
+	// Add columns to posts table for reaction counts
+	// _, err = db.Exec(`
+    // ALTER TABLE posts ADD COLUMN IF NOT EXISTS likes INTEGER DEFAULT 0;
+    // ALTER TABLE posts ADD COLUMN IF NOT EXISTS dislikes INTEGER DEFAULT 0;
+	// `)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to add reaction columns to posts: %v", err)
+	// }
 
 	return db, nil
 }

@@ -67,17 +67,13 @@
                     {{end}}
                 </div>
                 <div class="post-footer">
-                    <button class="action-btn like-btn" onclick="event.stopPropagation();">
+                    <button class="action-btn like-btn" data-post-id="{{.ID}}" data-action="like">
                         <i class="fas fa-heart"></i>
-                        <span class="count">{{.Likes}}</span>
+                        <span class="count" id="likes-{{.ID}}">{{.Likes}}</span>
                     </button>
-                    <button class="action-btn dislike-btn" onclick="event.stopPropagation();">
+                    <button class="action-btn dislike-btn" data-post-id="{{.ID}}" data-action="dislike">
                         <i class="fas fa-thumbs-down"></i>
-                        <span class="count">{{.Dislikes}}</span>
-                    </button>
-                    <button class="action-btn comment-btn" onclick="event.stopPropagation();">
-                        <i class="fas fa-comment"></i>
-                        <span class="count">{{.Comments}}</span>
+                        <span class="count" id="dislikes-{{.ID}}">{{.Dislikes}}</span>
                     </button>
                 </div>
             </div>
@@ -85,7 +81,8 @@
         </div>
     </main>
 
-    <script src="../static/script.js"></script>
+
+    <script src="../static/like.js" defer></script>
 </body>
 
 </html>

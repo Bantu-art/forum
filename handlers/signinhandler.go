@@ -3,8 +3,8 @@ package handlers
 import (
 	"database/sql"
 	"html/template"
+	"log"
 	"net/http"
-	"time"
 
 	"forum/utils"
 )
@@ -85,11 +85,14 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 		http.SetCookie(w, &http.Cookie{
 			Name:     "session_token",
 			Value:    sessionToken,
-			Expires:  time.Now().Add(24 * time.Hour), // Set expiration
-			HttpOnly: true,
-			Secure:   true,
-			SameSite: http.SameSiteDefaultMode,
+			Path:     "/",
+			HttpOnly: false, // Allow JS access
+			Secure:   false, // Set true in production
+			SameSite: http.SameSiteLaxMode,
+			MaxAge:   24 * 60 * 60,
 		})
+
+		log.Printf("Set session cookie: %s", sessionToken)
 
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}

@@ -25,6 +25,7 @@ type Post struct {
     Comments   int
     Username   string
     ProfilePic sql.NullString
+	UserReaction *int
 }
 
 type Comment struct {
