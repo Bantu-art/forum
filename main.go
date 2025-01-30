@@ -21,21 +21,35 @@ func main() {
 	// Initialize handlers with database
 	handlers.InitDB(db)
 	utils.InitSessionManager(utils.GlobalDB)
+
 	// Setup routes
 	http.HandleFunc("/signup", handlers.SignUpHandler)
 	http.HandleFunc("/signin", handlers.SignInHandler)
+	http.HandleFunc("/signout", handlers.SignOutHandler(db))
 	// Add other route handlers...
 	// http.Handle("/", &controllers.PostHandler{})
+
 	postHandler := controllers.NewPostHandler()
-	http.Handle("/", postHandler)
+	http.Handle("/", postHandler) // Handle root for posts
+
+	// Initialize profile handler
 	profileHandler := controllers.NewProfileHandler()
 	http.Handle("/profile", profileHandler)
-	// http.Handle("/post", postHandler)
+
+	// Initialize category handler
+	categoryHandler := controllers.NewCategoryHandler()
+	http.Handle("/categories", categoryHandler)
+	http.Handle("/category", categoryHandler)
+
+	// Static file serving
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
-	fmt.Println("Server opened at port 3000...http://localhost:8000/")
+	fmt.Println("Server opened at port 8000...http://localhost:8000/")
+
+
+	// Log server start
+	fmt.Println("Server opened at port 8000... http://localhost:8000/")
 
 	// Start server
-
 	err = http.ListenAndServe(":8000", nil)
 	if err != nil {
 		log.Fatalf("Server failed to start: %v", err)

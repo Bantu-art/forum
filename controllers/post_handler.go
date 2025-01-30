@@ -69,8 +69,14 @@ func (ph *PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Update handler signatures to match http.HandlerFunc
 func (ph *PostHandler) displayCreateForm(w http.ResponseWriter, r *http.Request) {
+	categories, err := ph.getAllCategories()
+	if err != nil {
+		log.Printf("Error fetching categories: %v", err)
+		http.Error(w, "Error loading categories", http.StatusInternalServerError)
+		return
+	}
+
 	tmpl, err := template.ParseFiles("templates/createpost.html")
 	if err != nil {
 		log.Printf("Error parsing create form template: %v", err)
@@ -78,10 +84,36 @@ func (ph *PostHandler) displayCreateForm(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if err := tmpl.Execute(w, nil); err != nil {
+	data := struct {
+		Categories []utils.Category
+	}{
+		Categories: categories,
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
 		log.Printf("Error executing create form template: %v", err)
 		http.Error(w, "Error loading template", http.StatusInternalServerError)
 	}
+}
+
+func (ph *PostHandler) getAllCategories() ([]utils.Category, error) {
+	rows, err := utils.GlobalDB.Query("SELECT id, name FROM categories")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var categories []utils.Category
+	for rows.Next() {
+		var category utils.Category
+		if err := rows.Scan(&category.ID, &category.Name); err != nil {
+			log.Printf("Error scanning category: %v", err)
+			continue
+		}
+		categories = append(categories, category)
+	}
+
+	return categories, rows.Err()
 }
 
 func (ph *PostHandler) handleGetPosts(w http.ResponseWriter, r *http.Request) {
@@ -111,44 +143,65 @@ func (ph *PostHandler) handleGetPosts(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ph *PostHandler) getAllPosts() ([]utils.Post, error) {
-    rows, err := utils.GlobalDB.Query(`
+	rows, err := utils.GlobalDB.Query(`
         SELECT p.id, p.user_id, p.title, p.content, p.imagepath, 
                p.post_at, p.likes, p.dislikes, p.comments,
-               u.username, u.profile_pic
+               u.username, u.profile_pic, c.id AS category_id, c.name AS category_name
         FROM posts p
         JOIN users u ON p.user_id = u.id
+        LEFT JOIN post_categories pc ON p.id = pc.post_id
+        LEFT JOIN categories c ON pc.category_id = c.id
         ORDER BY p.post_at DESC
     `)
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
-    var posts []utils.Post
-    for rows.Next() {
-        var post utils.Post
-        var postTime time.Time
-        if err := rows.Scan(
-            &post.ID,
-            &post.UserID,
-            &post.Title,
-            &post.Content,
-            &post.ImagePath,
-            &postTime,
-            &post.Likes,
-            &post.Dislikes,
-            &post.Comments,
-            &post.Username,
-            &post.ProfilePic,
-        ); err != nil {
-            log.Printf("Error scanning post: %v", err)
-            continue
-        }
-        post.PostTime = FormatTimeAgo(postTime)
-        posts = append(posts, post)
-    }
+	var posts []utils.Post
+	for rows.Next() {
+		var post utils.Post
+		var postTime time.Time
+		var categoryID sql.NullInt64
+		var categoryName sql.NullString
 
-    return posts, rows.Err()
+		if err := rows.Scan(
+			&post.ID,
+			&post.UserID,
+			&post.Title,
+			&post.Content,
+			&post.ImagePath,
+			&postTime,
+			&post.Likes,
+			&post.Dislikes,
+			&post.Comments,
+			&post.Username,
+			&post.ProfilePic,
+			&categoryID,
+			&categoryName,
+		); err != nil {
+			log.Printf("Error scanning post: %v", err)
+			continue
+		}
+
+		if categoryID.Valid {
+			categoryIDInt := int(categoryID.Int64)
+			post.CategoryID = &categoryIDInt
+		} else {
+			post.CategoryID = nil
+		}
+
+		if categoryName.Valid {
+			post.CategoryName = &categoryName.String
+		} else {
+			post.CategoryName = nil
+		}
+
+		post.PostTime = FormatTimeAgo(postTime)
+		posts = append(posts, post)
+	}
+
+	return posts, rows.Err()
 }
 
 // Update handleCreatePost method
@@ -168,17 +221,15 @@ func (ph *PostHandler) handleCreatePost(w http.ResponseWriter, r *http.Request) 
 
 	// Get form values
 	title := r.FormValue("title")
+	fmt.Println(title)
 	content := r.FormValue("content")
+	fmt.Println(content)
+	categoryID := r.FormValue("categories")
+	fmt.Println(categoryID)
 
-	// Basic validation
-	if title == "" {
-		log.Printf("Title is empty")
-		http.Error(w, "Title is required", http.StatusBadRequest)
-		return
-	}
-	if content == "" {
-		log.Printf("Content is empty")
-		http.Error(w, "Content is required", http.StatusBadRequest)
+	if title == "" || content == "" || categoryID == "" {
+		log.Printf("Title, content, and category are required")
+		http.Error(w, "Title, content, and category are required", http.StatusBadRequest)
 		return
 	}
 	// Handle image upload
@@ -215,6 +266,16 @@ func (ph *PostHandler) handleCreatePost(w http.ResponseWriter, r *http.Request) 
 	}
 
 	postID, _ := result.LastInsertId()
+
+	if categoryID != "" {
+		_, err = utils.GlobalDB.Exec(`
+            INSERT INTO post_categories (post_id, category_id) 
+            VALUES (?, ?)
+        `, postID, categoryID)
+		if err != nil {
+			log.Printf("Error inserting into post_categories: %v", err)
+		}
+	}
 	log.Printf("Successfully created post with ID: %d", postID)
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -302,7 +363,7 @@ func (ph *PostHandler) handleSinglePost(w http.ResponseWriter, r *http.Request) 
 
 // Add this helper method to fetch a single post
 func (ph *PostHandler) getPostByID(id int64) (*utils.Post, error) {
-    row := utils.GlobalDB.QueryRow(`
+	row := utils.GlobalDB.QueryRow(`
         SELECT p.id, p.user_id, p.title, p.content, p.imagepath, 
                p.post_at, p.likes, p.dislikes, p.comments,
                u.username, u.profile_pic
@@ -311,32 +372,32 @@ func (ph *PostHandler) getPostByID(id int64) (*utils.Post, error) {
         WHERE p.id = ?
     `, id)
 
-    var post utils.Post
-    var postTime time.Time
+	var post utils.Post
+	var postTime time.Time
 
-    err := row.Scan(
-        &post.ID,
-        &post.UserID,
-        &post.Title,
-        &post.Content,
-        &post.ImagePath,
-        &postTime,
-        &post.Likes,
-        &post.Dislikes,
-        &post.Comments,
-        &post.Username,
-        &post.ProfilePic,
-    )
+	err := row.Scan(
+		&post.ID,
+		&post.UserID,
+		&post.Title,
+		&post.Content,
+		&post.ImagePath,
+		&postTime,
+		&post.Likes,
+		&post.Dislikes,
+		&post.Comments,
+		&post.Username,
+		&post.ProfilePic,
+	)
 
-    if err == sql.ErrNoRows {
-        return nil, nil
-    }
-    if err != nil {
-        return nil, err
-    }
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
 
-    post.PostTime = FormatTimeAgo(postTime)
-    return &post, nil
+	post.PostTime = FormatTimeAgo(postTime)
+	return &post, nil
 }
 
 func (ph *PostHandler) checkAuthStatus(r *http.Request) bool {
