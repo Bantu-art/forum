@@ -36,7 +36,8 @@ func main() {
 
 	// Initialize category handler
 	categoryHandler := controllers.NewCategoryHandler()
-	http.Handle("/categories", categoryHandler) // Handle categories
+	http.Handle("/categories", categoryHandler)
+	http.Handle("/category", categoryHandler)
 
 	// Static file serving
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
