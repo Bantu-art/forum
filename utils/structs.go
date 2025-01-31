@@ -14,18 +14,20 @@ type User struct {
 }
 
 type Post struct {
-    ID         int
-    UserID     string
-    Title      string
-    Content    string
-    ImagePath  string
-    PostTime   string
-    Likes      int
-    Dislikes   int
-    Comments   int
-    Username   string
-    ProfilePic sql.NullString
-	UserReaction *int
+
+	ID           int
+	UserID       string
+	Title        string
+	Content      string
+	ImagePath    string
+	PostTime     string
+	Likes        int
+	Dislikes     int
+	Comments     int
+	Username     string
+	ProfilePic   sql.NullString
+	CategoryID   *int
+	CategoryName *string
 }
 
 type Comment struct {

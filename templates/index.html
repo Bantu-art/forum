@@ -31,33 +31,57 @@
                     <button class="btn btn-outline" onclick="window.location.href='/profile'">
                         <i class="fas fa-user"></i> Profile
                     </button>
-                    <button class="btn btn-primary" onclick="window.location.href='/logout'">
-                        <i class="fas fa-sign-out-alt"></i> Logout
+                    <button class="btn btn-primary" onclick="window.location.href='/signout'">
+                        <i class="fas fa-sign-out-alt"></i> Sign Out
                     </button>
                 {{end}}
             </div>
         </div>
     </nav>
 
-    <main class="main-content">
-        <div class="posts-container">
-            {{range .Posts}}
-            <div class="post-card">
-                <a href="/?id={{.ID}}" class="post-link"></a>
-                <div class="post-header">
-                    <div class="post-avatar">
-                        {{if .ProfilePic.Valid}}
-                            <img src="{{.ProfilePic.String}}" alt="Profile Picture" class="post-avatar-img">
-                        {{else}}
-                            <div class="post-avatar-placeholder">
-                                <i class="fas fa-user"></i>
-                            </div>
+    <div class="main-wrapper">
+        <aside class="sidebar">
+            <h3>Categories</h3>
+            <ul class="category-list">
+                <li><a href="/category?name=Tech">Tech</a></li>
+                <li><a href="/category?name=Programming">Programming</a></li>
+                <li><a href="/category?name=Business">Business</a></li>
+                <li><a href="/category?name=Lifestyle">Lifestyle</a></li>
+                <li><a href="/category?name=Personal%20development">Personal development</a></li>
+                <li><a href="/category?name=Football">Football</a></li>
+                <li><a href="/category?name=Politics">Politics</a></li>
+                <li><a href="/category?name=General%20News">General News</a></li>
+            </ul>
+        </aside>
+        
+
+        <main class="main-content">
+            <div class="posts-container">
+                {{range .Posts}}
+                <div class="post-card">
+                    <a href="/?id={{.ID}}" class="post-link"></a>
+                    <div class="post-header">
+                        <div class="post-avatar">
+                            {{if .ProfilePic.Valid}}
+                                <img src="{{.ProfilePic.String}}" alt="Profile Picture" class="post-avatar-img">
+                            {{else}}
+                                <div class="post-avatar-placeholder">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            {{end}}
+                        </div>
+                        <div class="post-info">
+                            <h3>{{.Username}}</h3>
+                            <span class="timestamp">{{.PostTime}}</span>
+                        </div>
+                    </div>
+                    <div class="post-content">
+                        <p>{{.Content}}</p>
+                        {{if .ImagePath}}
+                        <img src="{{.ImagePath}}" alt="Post image" class="post-image">
                         {{end}}
                     </div>
-                    <div class="post-info">
-                        <h3>{{.Username}}</h3>
-                        <span class="timestamp">{{.PostTime}}</span>
-                    </div>
+                   
                 </div>
                 <div class="post-content">
                     <p>{{.Content}}</p>
@@ -75,10 +99,10 @@
                         <span class="count" id="dislikes-{{.ID}}">{{.Dislikes}}</span>
                     </button>
                 </div>
+                {{end}}
             </div>
-            {{end}}
-        </div>
-    </main>
+        </main>
+    </div>
 
          <script src="../static/like.js"></script> 
         
