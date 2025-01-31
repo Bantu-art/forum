@@ -14,6 +14,7 @@ type User struct {
 }
 
 type Post struct {
+
 	ID           int
 	UserID       string
 	Title        string

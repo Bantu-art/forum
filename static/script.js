@@ -24,23 +24,47 @@ function updateThemeIcon(theme) {
 }
 
 // Like, dislike, and comment functionality
-document.querySelectorAll('.action-btn').forEach(button => {
-    button.addEventListener('click', () => {
-        const countSpan = button.querySelector('.count');
-        let count = parseInt(countSpan.textContent);
-        countSpan.textContent = count + 1;
-        
-        button.style.transform = 'scale(1.2)';
-        setTimeout(() => {
-            button.style.transform = 'scale(1)';
-        }, 200);
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.action-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const postId = this.getAttribute('data-post-id');
+            const action = this.getAttribute('data-action');
+            handleReaction(postId, action);
+        });
     });
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-    document.body.style.transition = 'background-color 0.3s, color 0.3s';
-});
+function handleReaction(postId, action) {
+    const sessionToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('session_token='))
+        ?.split('=')[1];
 
+    console.log("Session token found:", sessionToken);
+
+    if (!sessionToken) {
+        window.location.href = '/signin';
+        return;
+    }
+
+    fetch('/react', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            post_id: parseInt(postId),
+            reaction_type: action
+        }),
+        credentials: 'include'
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.querySelector(`#likes-${postId}`).textContent = data.likes;
+        document.querySelector(`#dislikes-${postId}`).textContent = data.dislikes;
+    })
+    .catch(error => console.error('Error:', error));
+}
 
 // Image preview functionality
 const imageInput = document.getElementById('post-image');
