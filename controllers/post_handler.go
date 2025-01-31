@@ -266,65 +266,63 @@ func FormatTimeAgo(t time.Time) string {
 }
 
 func (ph *PostHandler) handleSinglePost(w http.ResponseWriter, r *http.Request) {
-    
-    postIDStr := r.URL.Query().Get("id")
-    
-    if postIDStr == "" {
-        http.Error(w, "Post ID is required", http.StatusBadRequest)
-        return
-    }
+	postIDStr := r.URL.Query().Get("id")
 
-    postID, err := strconv.ParseInt(postIDStr, 10, 64)
-    if err != nil {
-        log.Printf("Invalid post ID: %v", err)
-        http.Error(w, "Invalid post ID", http.StatusBadRequest)
-        return
-    }
+	if postIDStr == "" {
+		http.Error(w, "Post ID is required", http.StatusBadRequest)
+		return
+	}
 
-    // Get user ID if logged in
-    var userID string
-    if cookie, err := r.Cookie("session_token"); err == nil {
-        userID, _ = utils.ValidateSession(utils.GlobalDB, cookie.Value)
-    }
+	postID, err := strconv.ParseInt(postIDStr, 10, 64)
+	if err != nil {
+		log.Printf("Invalid post ID: %v", err)
+		http.Error(w, "Invalid post ID", http.StatusBadRequest)
+		return
+	}
 
-    post, err := ph.getPostByID(postID)
-    if err != nil {
-        log.Printf("Error fetching post: %v", err)
-        http.Error(w, "Error fetching post", http.StatusInternalServerError)
-        return
-    }
+	// Get user ID if logged in
+	var userID string
+	if cookie, err := r.Cookie("session_token"); err == nil {
+		userID, _ = utils.ValidateSession(utils.GlobalDB, cookie.Value)
+	}
 
-    if post == nil {
-        log.Printf("Post not found: %d", postID)
-        http.Error(w, "Post not found", http.StatusNotFound)
-        return
-    }
+	post, err := ph.getPostByID(postID)
+	if err != nil {
+		log.Printf("Error fetching post: %v", err)
+		http.Error(w, "Error fetching post", http.StatusInternalServerError)
+		return
+	}
 
-    // Add user's reaction if logged in
-    if userID != "" {
-        var reaction int
-        err := utils.GlobalDB.QueryRow(
-            "SELECT like FROM reaction WHERE user_id = ? AND post_id = ?", 
-            userID, postID,
-        ).Scan(&reaction)
-        if err != sql.ErrNoRows {
-            post.UserReaction = &reaction
-        }
-    }
+	if post == nil {
+		log.Printf("Post not found: %d", postID)
+		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	}
 
+	// Add user's reaction if logged in
+	if userID != "" {
+		var reaction int
+		err := utils.GlobalDB.QueryRow(
+			"SELECT like FROM reaction WHERE user_id = ? AND post_id = ?",
+			userID, postID,
+		).Scan(&reaction)
+		if err != sql.ErrNoRows {
+			post.UserReaction = &reaction
+		}
+	}
 
 	tmpl, err := template.ParseFiles("templates/post.html")
-    if err != nil {
-        log.Printf("Template parsing error: %v", err)
-        http.Error(w, "Internal server error", http.StatusInternalServerError)
-        return
-    }
+	if err != nil {
+		log.Printf("Template parsing error: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 
-    if err := tmpl.Execute(w, post); err != nil {
-        log.Printf("Template execution error: %v", err)
-        // Don't write header here since Execute might have already written response
-        log.Printf("Error rendering template: %v", err)
-    }
+	if err := tmpl.Execute(w, post); err != nil {
+		log.Printf("Template execution error: %v", err)
+		// Don't write header here since Execute might have already written response
+		log.Printf("Error rendering template: %v", err)
+	}
 }
 
 // Add this helper method to fetch a single post
@@ -376,89 +374,88 @@ func (ph *PostHandler) checkAuthStatus(r *http.Request) bool {
 }
 
 func (ph *PostHandler) handleReactions(w http.ResponseWriter, r *http.Request) {
-    userID := r.Context().Value("userID").(string)
-    if userID == "" {
-        w.Header().Set("Content-Type", "application/json")
-        w.WriteHeader(http.StatusUnauthorized)
-        json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
-        return
-    }
+	userID := r.Context().Value("userID").(string)
+	if userID == "" {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
+		return
+	}
 
-    var req struct {
-        PostID int `json:"post_id"`
-        Like   int `json:"like"` // 1 for like, 0 for dislike
-    }
-    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-        w.Header().Set("Content-Type", "application/json")
-        w.WriteHeader(http.StatusBadRequest)
-        json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
-        return
-    }
+	var req struct {
+		PostID int `json:"post_id"`
+		Like   int `json:"like"` // 1 for like, 0 for dislike
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
+		return
+	}
 
-    if req.Like != 0 && req.Like != 1 {
-        w.Header().Set("Content-Type", "application/json")
-        w.WriteHeader(http.StatusBadRequest)
-        json.NewEncoder(w).Encode(map[string]string{"error": "Invalid reaction type"})
-        return
-    }
+	if req.Like != 0 && req.Like != 1 {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid reaction type"})
+		return
+	}
 
-    // Check if the user already has a reaction
-    var existingLike int
-    err := utils.GlobalDB.QueryRow("SELECT like FROM reaction WHERE user_id = ? AND post_id = ?", userID, req.PostID).Scan(&existingLike)
-    if err != nil && err != sql.ErrNoRows {
-        w.Header().Set("Content-Type", "application/json")
-        w.WriteHeader(http.StatusInternalServerError)
-        json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
-        return
-    }
+	// Check if the user already has a reaction
+	var existingLike int
+	err := utils.GlobalDB.QueryRow("SELECT like FROM reaction WHERE user_id = ? AND post_id = ?", userID, req.PostID).Scan(&existingLike)
+	if err != nil && err != sql.ErrNoRows {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
+		return
+	}
 
-    if err == sql.ErrNoRows {
-        // Insert new reaction
-        _, err = utils.GlobalDB.Exec("INSERT INTO reaction (user_id, post_id, like) VALUES (?, ?, ?)", userID, req.PostID, req.Like)
-        if err != nil {
-            w.Header().Set("Content-Type", "application/json")
-            w.WriteHeader(http.StatusInternalServerError)
-            json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
-            return
-        }
-    } else {
-        if existingLike == req.Like {
-            // User is unliking or undisliking
-            _, err = utils.GlobalDB.Exec("DELETE FROM reaction WHERE user_id = ? AND post_id = ?", userID, req.PostID)
-            if err != nil {
-                w.Header().Set("Content-Type", "application/json")
-                w.WriteHeader(http.StatusInternalServerError)
-                json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
-                return
-            }
-        } else {
-            // Update existing reaction
-            _, err = utils.GlobalDB.Exec("UPDATE reaction SET like = ? WHERE user_id = ? AND post_id = ?", req.Like, userID, req.PostID)
-            if err != nil {
-                w.Header().Set("Content-Type", "application/json")
-                w.WriteHeader(http.StatusInternalServerError)
-                json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
-                return
-            }
-        }
-    }
+	if err == sql.ErrNoRows {
+		// Insert new reaction
+		_, err = utils.GlobalDB.Exec("INSERT INTO reaction (user_id, post_id, like) VALUES (?, ?, ?)", userID, req.PostID, req.Like)
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
+			return
+		}
+	} else {
+		if existingLike == req.Like {
+			// User is unliking or undisliking
+			_, err = utils.GlobalDB.Exec("DELETE FROM reaction WHERE user_id = ? AND post_id = ?", userID, req.PostID)
+			if err != nil {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
+				return
+			}
+		} else {
+			// Update existing reaction
+			_, err = utils.GlobalDB.Exec("UPDATE reaction SET like = ? WHERE user_id = ? AND post_id = ?", req.Like, userID, req.PostID)
+			if err != nil {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
+				return
+			}
+		}
+	}
 
-    // Fetch updated like and dislike counts
-    var likes, dislikes int
-    err = utils.GlobalDB.QueryRow("SELECT likes, dislikes FROM posts WHERE id = ?", req.PostID).Scan(&likes, &dislikes)
-    if err != nil {
-        w.Header().Set("Content-Type", "application/json")
-        w.WriteHeader(http.StatusInternalServerError)
-        json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
-        return
-    }
+	// Fetch updated like and dislike counts
+	var likes, dislikes int
+	err = utils.GlobalDB.QueryRow("SELECT likes, dislikes FROM posts WHERE id = ?", req.PostID).Scan(&likes, &dislikes)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
+		return
+	}
 
-    // Return updated counts as JSON
-    w.Header().Set("Content-Type", "application/json")
-    w.WriteHeader(http.StatusOK)
-    json.NewEncoder(w).Encode(map[string]int{
-        "likes":    likes,
-        "dislikes": dislikes,
-    })
+	// Return updated counts as JSON
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]int{
+		"likes":    likes,
+		"dislikes": dislikes,
+	})
 }
-

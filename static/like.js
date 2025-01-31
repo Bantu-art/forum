@@ -1,36 +1,45 @@
 function handleReaction(event) {
+    event.stopPropagation(); // Prevent post link click when clicking like/dislike
+    
     const button = event.currentTarget;
-    const postID = button.getAttribute("data-post-id"); // Get post_id from the button
-    const action = button.getAttribute("data-action"); // "like" or "dislike"
+    const postID = button.getAttribute("data-post-id");
+    const action = button.getAttribute("data-action");
+    
+    // Check if user is logged in by looking for session cookie
+    const hasSession = document.cookie.includes('session_token=');
+    if (!hasSession) {
+        window.location.href = '/signin';
+        return;
+    }
 
-    // Determine the reaction type (1 for like, 0 for dislike)
     const like = action === "like" ? 1 : 0;
 
-    // Send a POST request to the /react endpoint
     fetch("/react", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
         },
         body: JSON.stringify({
-            post_id: parseInt(postID), // Ensure postID is an integer
+            post_id: parseInt(postID),
             like: like,
         }),
+        credentials: 'include' // Important: Send cookies with request
     })
     .then(response => {
-        if (!response.ok) {
-            // If the response is not OK, parse the error message
-            return response.json().then(errorData => {
-                throw new Error(errorData.error || "An error occurred");
-            });
+        if (response.status === 401) {
+            // Redirect to login if unauthorized
+            window.location.href = '/signin';
+            throw new Error('Please log in to react to posts');
         }
         return response.json();
     })
     .then(data => {
-        // Update the like and dislike counts in the UI
+        if (data.error) {
+            throw new Error(data.error);
+        }
         const likesElement = document.getElementById(`likes-${postID}`);
         const dislikesElement = document.getElementById(`dislikes-${postID}`);
-
+        
         if (likesElement && dislikesElement) {
             likesElement.textContent = data.likes;
             dislikesElement.textContent = data.dislikes;
@@ -38,7 +47,7 @@ function handleReaction(event) {
     })
     .catch(error => {
         console.error("Error:", error);
-        alert(error.message); // Show the error message to the user
+        alert(error.message);
     });
 }
 
