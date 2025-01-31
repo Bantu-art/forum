@@ -184,6 +184,8 @@ func (ph *PostHandler) getAllPosts() ([]utils.Post, error) {
 			&post.Comments,
 			&post.Username,
 			&post.ProfilePic,
+			&categoryID,
+			&categoryName,
 		); err != nil {
 			log.Printf("Error scanning post: %v", err)
 			continue
@@ -340,11 +342,11 @@ func (ph *PostHandler) handleSinglePost(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// Get user ID if logged in
-	var userID string
-	if cookie, err := r.Cookie("session_token"); err == nil {
-		userID, _ = utils.ValidateSession(utils.GlobalDB, cookie.Value)
-	}
+	// // Get user ID if logged in
+	// var userID string
+	// if cookie, err := r.Cookie("session_token"); err == nil {
+	// 	userID, _ = utils.ValidateSession(utils.GlobalDB, cookie.Value)
+	// }
 
 	post, err := ph.getPostByID(postID)
 	if err != nil {
@@ -359,17 +361,16 @@ func (ph *PostHandler) handleSinglePost(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// Add user's reaction if logged in
-	if userID != "" {
-		var reaction int
-		err := utils.GlobalDB.QueryRow(
-			"SELECT like FROM reaction WHERE user_id = ? AND post_id = ?",
-			userID, postID,
-		).Scan(&reaction)
-		if err != sql.ErrNoRows {
-			post.UserReaction = &reaction
-		}
-	}
+	// if userID != "" {
+	// 	var reaction int
+	// 	err := utils.GlobalDB.QueryRow(
+	// 		"SELECT like FROM reaction WHERE user_id = ? AND post_id = ?",
+	// 		userID, postID,
+	// 	).Scan(&reaction)
+	// 	if err != sql.ErrNoRows {
+	// 		post.UserReaction = &reaction
+	// 	}
+	// }
 
 	tmpl, err := template.ParseFiles("templates/post.html")
 	if err != nil {

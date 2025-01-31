@@ -46,6 +46,7 @@ func InitialiseDB() (*sql.DB, error) {
         likes INTEGER DEFAULT 0,
         dislikes INTEGER DEFAULT 0,
         comments INTEGER DEFAULT 0,
+		userreaction INTEGER,
         FOREIGN KEY (user_id) REFERENCES users(id)
     );
     CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts(user_id);
