@@ -32,7 +32,6 @@ func main() {
 
 	postHandler := controllers.NewPostHandler()
 
-
 	// http.Handle("/post", postHandler)
 	http.Handle("/", postHandler) // Handle root for posts
 
@@ -48,10 +47,6 @@ func main() {
 	// Static file serving
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	fmt.Println("Server opened at port 8000...http://localhost:8000/")
-
-
-	// Log server start
-	fmt.Println("Server opened at port 8000... http://localhost:8000/")
 
 	// Start server
 	err = http.ListenAndServe(":8000", nil)

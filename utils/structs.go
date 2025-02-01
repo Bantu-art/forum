@@ -14,7 +14,6 @@ type User struct {
 }
 
 type Post struct {
-
 	ID           int
 	UserID       string
 	Title        string
@@ -35,10 +34,12 @@ type Comment struct {
 	ID          int
 	PostID      int
 	UserID      string
+	Username    string
 	Content     string
 	CommentTime time.Time
 	Likes       int
 	Dislikes    int
+	ProfilePic  sql.NullString
 }
 
 type Category struct {
