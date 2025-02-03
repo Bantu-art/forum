@@ -541,6 +541,7 @@ func (ph *PostHandler) handleReactions(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ph *PostHandler) handleComment(w http.ResponseWriter, r *http.Request) {
+	
 	userID := r.Context().Value("userID").(string)
 	if userID == "" {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
