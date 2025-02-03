@@ -27,8 +27,6 @@ func main() {
 	http.HandleFunc("/signin", handlers.SignInHandler)
 
 	http.HandleFunc("/signout", handlers.SignOutHandler(db))
-	// Add other route handlers...
-	// http.Handle("/", &controllers.PostHandler{})
 
 	// Initialize post handler
 	postHandler := controllers.NewPostHandler()
