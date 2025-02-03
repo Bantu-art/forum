@@ -156,6 +156,78 @@ END;
 	if err != nil {
 		return nil, fmt.Errorf("failed to create comments table: %v", err)
 	}
+	// Create Comment Reaction table
+	_, err = db.Exec(`
+    CREATE TABLE IF NOT EXISTS comment_reaction (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        comment_id INTEGER NOT NULL,
+        is_like INTEGER NOT NULL CHECK (is_like IN (0, 1)),
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (comment_id) REFERENCES comments(id) ON DELETE CASCADE,
+        UNIQUE(user_id, comment_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_comment_reaction_comment_id ON comment_reaction(comment_id);
+    CREATE INDEX IF NOT EXISTS idx_comment_reaction_user_id ON comment_reaction(user_id);
+`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create comment_reaction table: %v", err)
+	}
+
+	// Create triggers to update comment likes/dislikes after insert, update and delete
+	_, err = db.Exec(`
+CREATE TRIGGER IF NOT EXISTS AfterCommentReactionInsert
+AFTER INSERT ON comment_reaction
+BEGIN
+    UPDATE comments SET
+        likes = CASE WHEN NEW.is_like = 1 THEN likes + 1 ELSE likes END,
+        dislikes = CASE WHEN NEW.is_like = 0 THEN dislikes + 1 ELSE dislikes END
+    WHERE id = NEW.comment_id;
+END;
+
+`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create trigger AfterCommentReactionInsert: %v", err)
+	}
+
+	_, err = db.Exec(`
+CREATE TRIGGER IF NOT EXISTS AfterCommentReactionUpdate
+AFTER UPDATE ON comment_reaction
+BEGIN
+    UPDATE comments SET
+        likes = CASE 
+                    WHEN OLD.is_like = 1 THEN likes - 1
+                    WHEN NEW.is_like = 1 THEN likes + 1
+                    ELSE likes 
+                END,
+        dislikes = CASE 
+                    WHEN OLD.is_like = 0 THEN dislikes - 1
+                    WHEN NEW.is_like = 0 THEN dislikes + 1
+                    ELSE dislikes 
+                END
+    WHERE id = NEW.comment_id;
+END;
+
+`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create trigger AfterCommentReactionUpdate: %v", err)
+	}
+
+	_, err = db.Exec(`
+CREATE TRIGGER IF NOT EXISTS AfterCommentReactionDelete
+AFTER DELETE ON comment_reaction
+BEGIN
+    UPDATE comments SET
+        likes = CASE WHEN OLD.is_like = 1 THEN likes - 1 ELSE likes END,
+        dislikes = CASE WHEN OLD.is_like = 0 THEN dislikes - 1 ELSE dislikes END
+    WHERE id = OLD.comment_id;
+END;
+
+`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create trigger AfterCommentReactionDelete: %v", err)
+	}
 
 	_, err = db.Exec(`
     CREATE TABLE IF NOT EXISTS categories (
