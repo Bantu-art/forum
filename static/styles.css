@@ -117,6 +117,31 @@ body {
     gap: 1.5rem;
 }
 
+.post-card {
+    position: relative;
+}
+
+.user-profile-link {
+    text-decoration: none;
+    color: inherit;
+    z-index: 2;
+    position: relative;
+}
+
+.user-profile-link:hover {
+    text-decoration: underline;
+}
+
+.post-content-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.post-content-link:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
 /* Post card styles */
 .post-card {
     background-color: var(--card-bg);
