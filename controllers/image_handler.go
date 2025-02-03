@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"crypto/md5"
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 const (
@@ -33,34 +35,30 @@ func NewImageHandler() *ImageHandler {
 
 // ProcessImage handles the image upload process
 func (ih *ImageHandler) ProcessImage(file multipart.File, header *multipart.FileHeader) (string, error) {
-	// Validate file size
-	if header.Size > maxUploadSize {
-		return "", fmt.Errorf("file size exceeds maximum limit")
-	}
-
-	// Validate file type
-	if !ih.isValidFileType(header.Filename) {
-		return "", fmt.Errorf("invalid file type")
-	}
-
 	// Generate unique filename
-	filename := ih.generateUniqueFilename(header.Filename)
-	filepath := filepath.Join(ih.uploadPath, filename)
+	ext := filepath.Ext(header.Filename)
+	newFileName := fmt.Sprintf("%x%s", md5.Sum([]byte(time.Now().String())), ext)
 
-	// Create destination file
-	dst, err := os.Create(filepath)
+	// Create uploads directory if it doesn't exist
+	uploadsDir := "static/uploads"
+	if err := os.MkdirAll(uploadsDir, 0o755); err != nil {
+		return "", err
+	}
+
+	// Save file
+	filePath := filepath.Join(uploadsDir, newFileName)
+	dst, err := os.Create(filePath)
 	if err != nil {
-		return "", fmt.Errorf("error creating destination file: %v", err)
+		return "", err
 	}
 	defer dst.Close()
 
-	// Copy uploaded file to destination
-	if _, err := io.Copy(dst, file); err != nil {
-		return "", fmt.Errorf("error copying file: %v", err)
+	if _, err = io.Copy(dst, file); err != nil {
+		return "", err
 	}
 
-	// Return the relative path for database storage
-	return filepath, nil
+	// Return web-accessible path
+	return "/static/uploads/" + newFileName, nil
 }
 
 // isValidFileType checks if the file type is allowed

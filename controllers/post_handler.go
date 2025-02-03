@@ -142,6 +142,12 @@ func (ph *PostHandler) handleGetPosts(w http.ResponseWriter, r *http.Request) {
 		Posts:      posts,
 	}
 
+	if cookie, err := r.Cookie("session_token"); err == nil {
+        if userID, err := utils.ValidateSession(utils.GlobalDB, cookie.Value); err == nil {
+            pageData.CurrentUserID = userID
+        }
+    }
+
 	tmpl, err := template.ParseFiles("templates/index.html")
 	if err != nil {
 		log.Printf("Error parsing template: %v", err)

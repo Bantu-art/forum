@@ -37,7 +37,7 @@ func main() {
 
 	// Initialize profile handler
 	profileHandler := controllers.NewProfileHandler()
-	http.Handle("/profile", profileHandler)
+	http.Handle("/profile/", profileHandler)
 
 	// Initialize category handler
 	categoryHandler := controllers.NewCategoryHandler()
