@@ -25,6 +25,8 @@ func main() {
 	// Setup routes
 	http.HandleFunc("/signup", handlers.SignUpHandler)
 	http.HandleFunc("/signin", handlers.SignInHandler)
+	http.HandleFunc("/created", controllers.CreatedPosts)
+	http.HandleFunc("/liked", controllers.LikedPosts)
 
 	http.HandleFunc("/signout", handlers.SignOutHandler(db))
 	// Add other route handlers...
