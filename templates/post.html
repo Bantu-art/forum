@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="../static/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
+
 <body>
     <nav class="navbar">
         <div class="nav-container">
@@ -32,17 +34,17 @@
         <button class="back-button" onclick="window.location.href='/'">
             <i class="fas fa-arrow-left"></i> Back
         </button>
-        
+
         <div class="single-post-container">
             <div class="post-main-content">
                 <div class="post-header">
                     <div class="post-avatar">
                         {{if .Post.ProfilePic.Valid}}
-                            <img src="{{.Post.ProfilePic.String}}" alt="Profile Picture" class="post-avatar-img">
+                        <img src="{{.Post.ProfilePic.String}}" alt="Profile Picture" class="post-avatar-img">
                         {{else}}
-                            <div class="post-avatar-placeholder">
-                                <i class="fas fa-user"></i>
-                            </div>
+                        <div class="post-avatar-placeholder">
+                            <i class="fas fa-user"></i>
+                        </div>
                         {{end}}
                     </div>
                     <div class="post-info">
@@ -50,9 +52,9 @@
                         <span class="timestamp">{{.Post.PostTime}}</span>
                     </div>
                 </div>
-                
+
                 <p>{{.Post.Content}}</p>
-                
+
                 {{if .Post.ImagePath}}
                 <div class="post-image-container">
                     <img src="{{.Post.ImagePath}}" alt="Post image">
@@ -79,22 +81,22 @@
 
             <div class="comments-section">
                 <h3>Comments ({{len .Comments}})</h3>
-                
+
                 <form method="POST" action="/comment" class="comment-form">
                     <input type="hidden" name="post_id" value="{{.Post.ID}}">
                     <textarea name="content" class="comment-input" placeholder="Write a comment..." required></textarea>
                     <button type="submit" class="btn btn-primary">Post Comment</button>
                 </form>
-            
+
                 {{range .Comments}}
                 <div class="comment">
                     <div class="comment-header">
                         {{if .ProfilePic.Valid}}
-                            <img src="{{.ProfilePic.String}}" class="comment-avatar">
+                        <img src="{{.ProfilePic.String}}" class="comment-avatar">
                         {{else}}
-                            <div class="comment-avatar-placeholder">
-                                <i class="fas fa-user"></i>
-                            </div>
+                        <div class="comment-avatar-placeholder">
+                            <i class="fas fa-user"></i>
+                        </div>
                         {{end}}
                         <div class="comment-author">
                             <strong>{{.Username}}</strong>
@@ -104,12 +106,24 @@
                     <div class="comment-content">
                         {{.Content}}
                     </div>
+                    <!-- Comment Reaction Buttons -->
+                    <div class="comment-reaction-buttons">
+                        <button class="action-btn comment-like-btn" data-comment-id="{{.ID}}" data-action="like">
+                            <i class="fas fa-heart"></i>
+                            <span class="count" id="comment-likes-{{.ID}}">{{.Likes}}</span>
+                        </button>
+                        <button class="action-btn comment-dislike-btn" data-comment-id="{{.ID}}" data-action="dislike">
+                            <i class="fas fa-thumbs-down"></i>
+                            <span class="count" id="comment-dislikes-{{.ID}}">{{.Dislikes}}</span>
+                        </button>
+                    </div>
                 </div>
                 {{end}}
             </div>
         </div>
     </main>
-   
+
     <script src="../static/like.js" type="text/javascript"></script>
 </body>
+
 </html>
