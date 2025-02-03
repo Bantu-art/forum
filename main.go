@@ -26,8 +26,14 @@ func main() {
 	http.HandleFunc("/signup", handlers.SignUpHandler)
 	http.HandleFunc("/signin", handlers.SignInHandler)
 
+	http.HandleFunc("/signout", handlers.SignOutHandler(db))
+	// Add other route handlers...
+	// http.Handle("/", &controllers.PostHandler{})
+
 	// Initialize post handler
 	postHandler := controllers.NewPostHandler()
+
+	// http.Handle("/post", postHandler)
 	http.Handle("/", postHandler) // Handle root for posts
 
 	// Initialize profile handler
@@ -41,9 +47,7 @@ func main() {
 
 	// Static file serving
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
-
-	// Log server start
-	fmt.Println("Server opened at port 8000... http://localhost:8000/")
+	fmt.Println("Server opened at port 8000...http://localhost:8000/")
 
 	// Start server
 	err = http.ListenAndServe(":8000", nil)

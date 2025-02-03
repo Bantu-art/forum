@@ -2,17 +2,17 @@ package utils
 
 import (
 	"context"
+	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
 	"fmt"
 	"log"
 	"time"
-
-	"crypto/rand"
 )
+
 var (
-    ErrActiveSession = fmt.Errorf("user already has an active session")
-    ErrNoSession    = fmt.Errorf("no active session found")
+	ErrActiveSession = fmt.Errorf("user already has an active session")
+	ErrNoSession     = fmt.Errorf("no active session found")
 )
 
 func GenerateSessionToken() string {
@@ -22,30 +22,30 @@ func GenerateSessionToken() string {
 }
 
 func CreateSession(db *sql.DB, userID string) (string, error) {
-    // Delete any existing session for the user
-    _, err := db.Exec(`
+	// Delete any existing session for the user
+	_, err := db.Exec(`
         DELETE FROM sessions
         WHERE user_id = ?
     `, userID)
-    if err != nil {
-        return "", fmt.Errorf("failed to delete existing session: %v", err)
-    }
+	if err != nil {
+		return "", fmt.Errorf("failed to delete existing session: %v", err)
+	}
 
-    // Generate new session
-    SessionToken := GenerateSessionToken()
-    ExpiresAt := time.Now().Add(24 * time.Hour)
+	// Generate new session
+	SessionToken := GenerateSessionToken()
+	ExpiresAt := time.Now().Add(24 * time.Hour)
 
-    // Create new session
-    _, err = db.Exec(`
+	// Create new session
+	_, err = db.Exec(`
         INSERT INTO sessions(id, user_id, expires_at)
         VALUES (?, ?, ?)
     `, SessionToken, userID, ExpiresAt)
-    if err != nil {
-        return "", fmt.Errorf("failed to create session: %v", err)
-    }
+	if err != nil {
+		return "", fmt.Errorf("failed to create session: %v", err)
+	}
 
-    log.Printf("Created new session for user %s", userID)
-    return SessionToken, nil
+	log.Printf("Created new session for user %s", userID)
+	return SessionToken, nil
 }
 
 func ValidateSession(db *sql.DB, sessionToken string) (string, error) {

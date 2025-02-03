@@ -25,6 +25,7 @@ type Post struct {
 	Comments     int
 	Username     string
 	ProfilePic   sql.NullString
+	UserReaction *int
 	CategoryID   *int
 	CategoryName *string
 }
@@ -33,10 +34,12 @@ type Comment struct {
 	ID          int
 	PostID      int
 	UserID      string
+	Username    string
 	Content     string
 	CommentTime time.Time
 	Likes       int
 	Dislikes    int
+	ProfilePic  sql.NullString
 }
 
 type Category struct {

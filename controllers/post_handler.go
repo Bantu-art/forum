@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
@@ -56,6 +57,12 @@ func (ph *PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
+	case "/react":
+		if r.Method == http.MethodPost {
+			ph.authMiddleware(ph.handleReactions).ServeHTTP(w, r)
+		} else {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
 	case "/":
 		if r.Method == http.MethodGet {
 			if r.URL.Query().Get("id") != "" {
@@ -63,6 +70,12 @@ func (ph *PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			} else {
 				ph.handleGetPosts(w, r) // Public access allowed
 			}
+		}
+	case "/comment":
+		if r.Method == http.MethodPost {
+			ph.authMiddleware(ph.handleComment).ServeHTTP(w, r)
+		} else {
+			http.Error(w, "Method not alloweds", http.StatusMethodNotAllowed)
 		}
 	default:
 		http.NotFound(w, r)
@@ -162,9 +175,9 @@ func (ph *PostHandler) getAllPosts() ([]utils.Post, error) {
 	for rows.Next() {
 		var post utils.Post
 		var postTime time.Time
+
 		var categoryID sql.NullInt64
 		var categoryName sql.NullString
-
 		if err := rows.Scan(
 			&post.ID,
 			&post.UserID,
@@ -197,7 +210,8 @@ func (ph *PostHandler) getAllPosts() ([]utils.Post, error) {
 			post.CategoryName = nil
 		}
 
-		post.PostTime = FormatTimeAgo(postTime)
+		// Convert postTime to local time before formatting
+		post.PostTime = FormatTimeAgo(postTime.Local())
 		posts = append(posts, post)
 	}
 
@@ -320,8 +334,8 @@ func FormatTimeAgo(t time.Time) string {
 }
 
 func (ph *PostHandler) handleSinglePost(w http.ResponseWriter, r *http.Request) {
-	// Get post ID from URL query parameter
 	postIDStr := r.URL.Query().Get("id")
+
 	if postIDStr == "" {
 		http.Error(w, "Post ID is required", http.StatusBadRequest)
 		return
@@ -329,40 +343,46 @@ func (ph *PostHandler) handleSinglePost(w http.ResponseWriter, r *http.Request) 
 
 	postID, err := strconv.ParseInt(postIDStr, 10, 64)
 	if err != nil {
+		log.Printf("Invalid post ID: %v", err)
 		http.Error(w, "Invalid post ID", http.StatusBadRequest)
 		return
 	}
 
-	// Get post from database
-	post, err := ph.getPostByID(postID)
+	post, comments, err := ph.getPostByID(postID)
 	if err != nil {
 		log.Printf("Error fetching post: %v", err)
 		http.Error(w, "Error fetching post", http.StatusInternalServerError)
 		return
 	}
 
-	// If post not found
 	if post == nil {
+		log.Printf("Post not found: %d", postID)
 		http.Error(w, "Post not found", http.StatusNotFound)
 		return
 	}
 
-	// Parse and execute template
 	tmpl, err := template.ParseFiles("templates/post.html")
 	if err != nil {
-		log.Printf("Error parsing template: %v", err)
-		http.Error(w, "Error loading template", http.StatusInternalServerError)
+		log.Printf("Template parsing error: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	if err := tmpl.Execute(w, post); err != nil {
-		log.Printf("Error executing template: %v", err)
-		http.Error(w, "Error loading template", http.StatusInternalServerError)
+	data := struct {
+		Post     *utils.Post
+		Comments []utils.Comment
+	}{
+		Post:     post,
+		Comments: comments,
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
+		log.Printf("Template execution error: %v", err)
 	}
 }
 
 // Add this helper method to fetch a single post
-func (ph *PostHandler) getPostByID(id int64) (*utils.Post, error) {
+func (ph *PostHandler) getPostByID(id int64) (*utils.Post, []utils.Comment, error) {
 	row := utils.GlobalDB.QueryRow(`
         SELECT p.id, p.user_id, p.title, p.content, p.imagepath, 
                p.post_at, p.likes, p.dislikes, p.comments,
@@ -390,14 +410,38 @@ func (ph *PostHandler) getPostByID(id int64) (*utils.Post, error) {
 	)
 
 	if err == sql.ErrNoRows {
-		return nil, nil
+		return nil, nil, err
 	}
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	post.PostTime = FormatTimeAgo(postTime)
-	return &post, nil
+	post.PostTime = FormatTimeAgo(postTime.Local())
+	// Get comments
+	rows, err := utils.GlobalDB.Query(`
+	  SELECT c.id, c.content, c.comment_at, u.username, u.profile_pic 
+	  FROM comments c
+	  JOIN users u ON c.user_id = u.id
+	  WHERE c.post_id = ?
+	  ORDER BY c.comment_at DESC`, id)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer rows.Close()
+
+	var comments []utils.Comment
+	for rows.Next() {
+		var c utils.Comment
+		var t time.Time
+		err := rows.Scan(&c.ID, &c.Content, &t, &c.Username, &c.ProfilePic)
+		if err != nil {
+			continue
+		}
+		c.CommentTime = t.Local()
+		comments = append(comments, c)
+	}
+
+	return &post, comments, nil
 }
 
 func (ph *PostHandler) checkAuthStatus(r *http.Request) bool {
@@ -407,4 +451,138 @@ func (ph *PostHandler) checkAuthStatus(r *http.Request) bool {
 	}
 	_, err = utils.ValidateSession(utils.GlobalDB, cookie.Value)
 	return err == nil
+}
+
+func (ph *PostHandler) handleReactions(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("userID").(string)
+	if userID == "" {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
+		return
+	}
+
+	var req struct {
+		PostID int `json:"post_id"`
+		Like   int `json:"like"` // 1 for like, 0 for dislike
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
+		return
+	}
+
+	if req.Like != 0 && req.Like != 1 {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid reaction type"})
+		return
+	}
+
+	// Check if the user already has a reaction
+	var existingLike int
+	err := utils.GlobalDB.QueryRow("SELECT like FROM reaction WHERE user_id = ? AND post_id = ?", userID, req.PostID).Scan(&existingLike)
+	if err != nil && err != sql.ErrNoRows {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
+		return
+	}
+
+	if err == sql.ErrNoRows {
+		// Insert new reaction
+		_, err = utils.GlobalDB.Exec("INSERT INTO reaction (user_id, post_id, like) VALUES (?, ?, ?)", userID, req.PostID, req.Like)
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
+			return
+		}
+	} else {
+		if existingLike == req.Like {
+			// User is unliking or undisliking
+			_, err = utils.GlobalDB.Exec("DELETE FROM reaction WHERE user_id = ? AND post_id = ?", userID, req.PostID)
+			if err != nil {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
+				return
+			}
+		} else {
+			// Update existing reaction
+			_, err = utils.GlobalDB.Exec("UPDATE reaction SET like = ? WHERE user_id = ? AND post_id = ?", req.Like, userID, req.PostID)
+			if err != nil {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
+				return
+			}
+		}
+	}
+
+	// Fetch updated like and dislike counts
+	var likes, dislikes int
+	err = utils.GlobalDB.QueryRow("SELECT likes, dislikes FROM posts WHERE id = ?", req.PostID).Scan(&likes, &dislikes)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
+		return
+	}
+
+	// Return updated counts as JSON
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]int{
+		"likes":    likes,
+		"dislikes": dislikes,
+	})
+}
+
+func (ph *PostHandler) handleComment(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("userID").(string)
+	if userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+
+	postID, err := strconv.Atoi(r.FormValue("post_id"))
+	if err != nil {
+		http.Error(w, "Invalid post ID", http.StatusBadRequest)
+		return
+	}
+
+	content := r.FormValue("content")
+	if content == "" {
+		http.Error(w, "Comment cannot be empty", http.StatusBadRequest)
+		return
+	}
+
+	// Insert comment
+	_, err = utils.GlobalDB.Exec(`
+        INSERT INTO comments (post_id, user_id, content) 
+        VALUES (?, ?, ?)`,
+		postID, userID, content,
+	)
+	if err != nil {
+		log.Printf("Error creating comment: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	// Update post comment count
+	_, err = utils.GlobalDB.Exec(`
+        UPDATE posts SET comments = comments + 1 
+        WHERE id = ?`, postID)
+	if err != nil {
+		log.Printf("Error updating comment count: %v", err)
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/?id=%d", postID), http.StatusSeeOther)
 }
