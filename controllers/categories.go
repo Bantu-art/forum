@@ -175,7 +175,7 @@ func (ch *CategoryHandler) getPostsByCategoryName(categoryName string) ([]utils.
         SELECT p.id, p.title, p.content 
         FROM posts p
         JOIN post_categories pc ON p.id = pc.post_id
-        JOIN categories c ON pc.category_id = c.id
+        JOIN categories c ON pc.category_id = c.name
         WHERE c.name = ?
     `, categoryName)
 	if err != nil {
