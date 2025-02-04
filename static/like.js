@@ -1,4 +1,6 @@
 function handleReaction(event) {
+    event.preventDefault();
+
     event.stopPropagation(); // Prevent post link click when clicking like/dislike
 
     const button = event.currentTarget;
