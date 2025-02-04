@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -50,6 +51,7 @@ func (ch *CategoryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 	}
 }
+
 func (ch *CategoryHandler) checkAuthStatus(r *http.Request) bool {
 	cookie, err := r.Cookie("session_token")
 	if err != nil {
@@ -153,6 +155,7 @@ func (ch *CategoryHandler) handleGetPostsByCategoryName(w http.ResponseWriter, r
 		IsLoggedIn: isLoggedIn,
 		Posts:      posts,
 	}
+	fmt.Println(data)
 
 	tmpl, err := template.ParseFiles("templates/category_posts.html")
 	if err != nil {
@@ -189,15 +192,17 @@ func (ch *CategoryHandler) getPostsByCategory(categoryID string) ([]utils.Post, 
 		}
 		posts = append(posts, post)
 	}
+	fmt.Println(posts)
 
 	return posts, rows.Err()
 }
 
 func (ch *CategoryHandler) getPostsByCategoryName(categoryName string) ([]utils.Post, error) {
 	rows, err := utils.GlobalDB.Query(`
-        SELECT p.id, p.title, p.content 
+        SELECT p.id, p.title, p.content, p.imagepath, u.username, u.profile_pic
         FROM posts p
         JOIN post_categories pc ON p.id = pc.post_id
+		JOIN users u ON p.user_id = u.id
         JOIN categories c ON pc.category_id = c.name
         WHERE c.name = ?
     `, categoryName)
@@ -209,7 +214,7 @@ func (ch *CategoryHandler) getPostsByCategoryName(categoryName string) ([]utils.
 	var posts []utils.Post
 	for rows.Next() {
 		var post utils.Post
-		if err := rows.Scan(&post.ID, &post.Title, &post.Content); err != nil {
+		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.ImagePath, &post.Username, &post.ProfilePic); err != nil {
 			log.Printf("Error scanning post: %v", err)
 			continue
 		}
