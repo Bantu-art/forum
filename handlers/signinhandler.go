@@ -52,42 +52,38 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 			FROM users
 			WHERE username = ?
 		`, username).Scan(&user.ID, &user.Password)
-		// Handle database errors
 		if err != nil {
 			if err == sql.ErrNoRows {
 				data.GeneralError = "Invalid username or password"
 			} else {
 				data.GeneralError = "An error occurred. Please try again later."
 			}
-			data.Username = username // Preserve the username input
+			data.Username = username
 			tmpl.Execute(w, data)
 			return
 		}
 
-		// Verify password
 		if !utils.CheckPasswordsHash(password, user.Password) {
 			data.GeneralError = "Invalid username or password"
-			data.Username = username // Preserve the username input
+			data.Username = username
 			tmpl.Execute(w, data)
 			return
 		}
 
-		// Create new session (this will delete any existing session)
 		sessionToken, err := utils.CreateSession(GlobalDB, user.ID)
 		if err != nil {
 			data.GeneralError = "An error occurred. Please try again later."
-			data.Username = username // Preserve the username input
+			data.Username = username
 			tmpl.Execute(w, data)
 			return
 		}
 
-		// Set session cookie with expiration
 		http.SetCookie(w, &http.Cookie{
 			Name:     "session_token",
 			Value:    sessionToken,
 			Path:     "/",
-			HttpOnly: false, // Allow JS access
-			Secure:   false, // Set true in production
+			HttpOnly: false,
+			Secure:   false,
 			SameSite: http.SameSiteLaxMode,
 			MaxAge:   24 * 60 * 60,
 		})

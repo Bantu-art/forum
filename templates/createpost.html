@@ -19,14 +19,12 @@
                     <i class="fas fa-moon"></i>
                 </button>
                 
-                
-                    <button class="btn btn-outline" onclick="window.location.href='/profile'">
-                        <i class="fas fa-user"></i> Profile
-                    </button>
-                    <button class="btn btn-primary" onclick="window.location.href='/signout'">
-                        <i class="fas fa-sign-out-alt"></i> Sign Out
-                    </button>
-                
+                <button class="btn btn-outline" onclick="window.location.href='/profile'">
+                    <i class="fas fa-user"></i> Profile
+                </button>
+                <button class="btn btn-primary" onclick="window.location.href='/logout'">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
             </div>
         </div>
     </nav>
@@ -57,12 +55,11 @@
 
                 <div class="form-group">
                     <label for="post-categories">Categories</label>
-                    <select name="categories" id="post-categories" multiple size="8">
+                    <select name="categories[]" id="post-categories" multiple size="8">
                         <option value="Tech">Tech</option>
                         <option value="Programming">Programming</option>
                         <option value="Business">Business</option>
                         <option value="Lifestyle">Lifestyle</option>
-                        <option value="Personal development">Personal development</option>
                         <option value="Football">Football</option>
                         <option value="Politics">Politics</option>
                         <option value="General News">General News</option>

@@ -1,9 +1,9 @@
-// Theme toggle functionality
+
 const themeToggle = document.getElementById('theme-toggle');
 const html = document.documentElement;
 const themeIcon = themeToggle.querySelector('i');
 
-// saved theme preference
+
 const savedTheme = localStorage.getItem('theme');
 if (savedTheme) {
     html.setAttribute('data-theme', savedTheme);
@@ -23,7 +23,7 @@ function updateThemeIcon(theme) {
     themeIcon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
 }
 
-// Like, dislike, and comment functionality
+
 document.querySelectorAll('.action-btn').forEach(button => {
     button.addEventListener('click', () => {
         const countSpan = button.querySelector('.count');
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-// Image preview functionality
+
 const imageInput = document.getElementById('post-image');
 const imagePreview = document.getElementById('image-preview');
 
@@ -62,7 +62,7 @@ if (imageInput && imagePreview) {
         }
     });
 }
-// JavaScript for image preview
+
 
 imageInput.addEventListener('change', function () {
     const file = this.files[0];
@@ -77,7 +77,7 @@ imageInput.addEventListener('change', function () {
     }
 });
 
-// JavaScript to handle form submission
+
 const form = document.getElementById('create-post-form');
 form.addEventListener('submit', function (e) {
     e.preventDefault();
@@ -92,15 +92,15 @@ form.addEventListener('submit', function (e) {
     console.log('Categories:', categories);
     console.log('Image:', image);
 
-    // You can now send this data to your backend or handle it as needed
+
     alert('Post created successfully!');
-    window.location.href = '/'; // Redirect to the home page
+    window.location.href = '/';
 });
 async function loadPosts(category) {
 const response = await fetch(`/posts?category=${category}`);
 const posts = await response.json();
 const postsContainer = document.getElementById('posts-container');
-    postsContainer.innerHTML = ''; // Clear previous posts
+    postsContainer.innerHTML = '';
 
     posts.forEach(post => {
                 const postCard = `

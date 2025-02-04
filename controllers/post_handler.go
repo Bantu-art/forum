@@ -66,9 +66,9 @@ func (ph *PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case "/":
 		if r.Method == http.MethodGet {
 			if r.URL.Query().Get("id") != "" {
-				ph.handleSinglePost(w, r) // Public access allowed
+				ph.handleSinglePost(w, r)
 			} else {
-				ph.handleGetPosts(w, r) // Public access allowed
+				ph.handleGetPosts(w, r)
 			}
 		}
 	case "/comment":
@@ -149,10 +149,10 @@ func (ph *PostHandler) handleGetPosts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if cookie, err := r.Cookie("session_token"); err == nil {
-        if userID, err := utils.ValidateSession(utils.GlobalDB, cookie.Value); err == nil {
-            pageData.CurrentUserID = userID
-        }
-    }
+		if userID, err := utils.ValidateSession(utils.GlobalDB, cookie.Value); err == nil {
+			pageData.CurrentUserID = userID
+		}
+	}
 
 	tmpl, err := template.ParseFiles("templates/index.html")
 	if err != nil {
@@ -250,10 +250,9 @@ func (ph *PostHandler) handleCreatePost(w http.ResponseWriter, r *http.Request) 
 	fmt.Println(title)
 	content := r.FormValue("content")
 	fmt.Println(content)
-	categoryID := r.FormValue("categories")
-	fmt.Println(categoryID)
+	categories := r.Form["categories[]"]
 
-	if title == "" || content == "" || categoryID == "" {
+	if title == "" || content == "" || len(categories) == 0 {
 		log.Printf("Title, content, and category are required")
 		http.Error(w, "Title, content, and category are required", http.StatusBadRequest)
 		return
@@ -293,7 +292,7 @@ func (ph *PostHandler) handleCreatePost(w http.ResponseWriter, r *http.Request) 
 
 	postID, _ := result.LastInsertId()
 
-	if categoryID != "" {
+	for _, categoryID := range categories {
 		_, err = utils.GlobalDB.Exec(`
             INSERT INTO post_categories (post_id, category_id) 
             VALUES (?, ?)
@@ -302,6 +301,7 @@ func (ph *PostHandler) handleCreatePost(w http.ResponseWriter, r *http.Request) 
 			log.Printf("Error inserting into post_categories: %v", err)
 		}
 	}
+
 	log.Printf("Successfully created post with ID: %d", postID)
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -553,7 +553,7 @@ func (ph *PostHandler) handleReactions(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ph *PostHandler) handleComment(w http.ResponseWriter, r *http.Request) {
-	
+
 	userID := r.Context().Value("userID").(string)
 	if userID == "" {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)

@@ -45,13 +45,11 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		errors := SignUpErrors{}
 		hasError := false
 
-		// Validate email
 		if !utils.ValidateEmail(data.Email) {
 			errors.EmailError = "Invalid email format"
 			hasError = true
 		}
 
-		// Validate username
 		if !utils.ValidateUsername(data.UserName) {
 			errors.UsernameError = "Username must be between 3 and 30 characters"
 			hasError = true
@@ -75,7 +73,6 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Hash password and create user
 		hashedPassword, err := utils.HashPassword(password)
 		if err != nil {
 			errors.GeneralError = "Internal Server Error"

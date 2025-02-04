@@ -25,11 +25,11 @@ function handleReaction(event) {
             post_id: parseInt(postID),
             like: like,
         }),
-        credentials: 'include' // Important: Send cookies with request
+        credentials: 'include'
     })
     .then(response => {
         if (response.status === 401) {
-            // Redirect to login if unauthorized
+
             window.location.href = '/signin';
             throw new Error('Please log in to react to posts');
         }
