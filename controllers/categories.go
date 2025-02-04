@@ -31,7 +31,7 @@ func (ch *CategoryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, "Category ID is required", http.StatusBadRequest)
 				return
 			}
-			ch.handleGetPostsByCategory(w, categoryID)
+			ch.handleGetPostsByCategory(w, r, categoryID)
 		} else {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
@@ -42,13 +42,21 @@ func (ch *CategoryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, "Category name is required", http.StatusBadRequest)
 				return
 			}
-			ch.handleGetPostsByCategoryName(w, categoryName)
+			ch.handleGetPostsByCategoryName(w, r, categoryName)
 		} else {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	default:
 		http.NotFound(w, r)
 	}
+}
+func (ch *CategoryHandler) checkAuthStatus(r *http.Request) bool {
+	cookie, err := r.Cookie("session_token")
+	if err != nil {
+		return false
+	}
+	_, err = utils.ValidateSession(utils.GlobalDB, cookie.Value)
+	return err == nil
 }
 
 func (ch *CategoryHandler) handleGetCategories(w http.ResponseWriter, _ *http.Request) {
@@ -103,7 +111,7 @@ func (ch *CategoryHandler) handleCreateCategory(w http.ResponseWriter, r *http.R
 	http.Redirect(w, r, "/categories", http.StatusSeeOther)
 }
 
-func (ch *CategoryHandler) handleGetPostsByCategory(w http.ResponseWriter, categoryID string) {
+func (ch *CategoryHandler) handleGetPostsByCategory(w http.ResponseWriter, r *http.Request, categoryID string) {
 	posts, err := ch.getPostsByCategory(categoryID)
 	if err != nil {
 		log.Printf("Error fetching posts for category %s: %v", categoryID, err)
@@ -111,6 +119,13 @@ func (ch *CategoryHandler) handleGetPostsByCategory(w http.ResponseWriter, categ
 		return
 	}
 
+	isLoggedIn := ch.checkAuthStatus(r)
+
+	data := utils.PageData{
+		IsLoggedIn: isLoggedIn,
+		Posts:      posts,
+	}
+
 	tmpl, err := template.ParseFiles("templates/category_posts.html")
 	if err != nil {
 		log.Printf("Error parsing category posts template: %v", err)
@@ -118,13 +133,13 @@ func (ch *CategoryHandler) handleGetPostsByCategory(w http.ResponseWriter, categ
 		return
 	}
 
-	if err := tmpl.Execute(w, posts); err != nil {
+	if err := tmpl.Execute(w, data); err != nil {
 		log.Printf("Error executing category posts template: %v", err)
 		http.Error(w, "Error loading template", http.StatusInternalServerError)
 	}
 }
 
-func (ch *CategoryHandler) handleGetPostsByCategoryName(w http.ResponseWriter, categoryName string) {
+func (ch *CategoryHandler) handleGetPostsByCategoryName(w http.ResponseWriter, r *http.Request, categoryName string) {
 	posts, err := ch.getPostsByCategoryName(categoryName)
 	if err != nil {
 		log.Printf("Error fetching posts for category %s: %v", categoryName, err)
@@ -132,6 +147,13 @@ func (ch *CategoryHandler) handleGetPostsByCategoryName(w http.ResponseWriter, c
 		return
 	}
 
+	isLoggedIn := ch.checkAuthStatus(r)
+
+	data := utils.PageData{
+		IsLoggedIn: isLoggedIn,
+		Posts:      posts,
+	}
+
 	tmpl, err := template.ParseFiles("templates/category_posts.html")
 	if err != nil {
 		log.Printf("Error parsing category posts template: %v", err)
@@ -139,7 +161,7 @@ func (ch *CategoryHandler) handleGetPostsByCategoryName(w http.ResponseWriter, c
 		return
 	}
 
-	if err := tmpl.Execute(w, posts); err != nil {
+	if err := tmpl.Execute(w, data); err != nil {
 		log.Printf("Error executing category posts template: %v", err)
 		http.Error(w, "Error loading template", http.StatusInternalServerError)
 	}
@@ -147,9 +169,10 @@ func (ch *CategoryHandler) handleGetPostsByCategoryName(w http.ResponseWriter, c
 
 func (ch *CategoryHandler) getPostsByCategory(categoryID string) ([]utils.Post, error) {
 	rows, err := utils.GlobalDB.Query(`
-        SELECT p.id, p.title, p.content 
+        SELECT p.id, p.title, p.content, p.imagepath, u.username, u.profile_pic
         FROM posts p
         JOIN post_categories pc ON p.id = pc.post_id
+        JOIN users u ON p.user_id = u.id
         WHERE pc.category_id = ?
     `, categoryID)
 	if err != nil {
@@ -160,7 +183,7 @@ func (ch *CategoryHandler) getPostsByCategory(categoryID string) ([]utils.Post, 
 	var posts []utils.Post
 	for rows.Next() {
 		var post utils.Post
-		if err := rows.Scan(&post.ID, &post.Title, &post.Content); err != nil {
+		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.ImagePath, &post.Username, &post.ProfilePic); err != nil {
 			log.Printf("Error scanning post: %v", err)
 			continue
 		}

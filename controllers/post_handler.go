@@ -66,9 +66,9 @@ func (ph *PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case "/":
 		if r.Method == http.MethodGet {
 			if r.URL.Query().Get("id") != "" {
-				ph.handleSinglePost(w, r) // Public access allowed
+				ph.handleSinglePost(w, r)
 			} else {
-				ph.handleGetPosts(w, r) // Public access allowed
+				ph.handleGetPosts(w, r)
 			}
 		}
 	case "/comment":
@@ -553,7 +553,7 @@ func (ph *PostHandler) handleReactions(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ph *PostHandler) handleComment(w http.ResponseWriter, r *http.Request) {
-	
+
 	userID := r.Context().Value("userID").(string)
 	if userID == "" {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)

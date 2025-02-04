@@ -12,6 +12,13 @@
             <li>
                 <h2>{{.Title}}</h2>
                 <p>{{.Content}}</p>
+                {{if .ImagePath}}
+                    <img src="{{.ImagePath}}" alt="Post Image" width="200">
+                {{end}}
+                <div>
+                    <h3>Posted by: {{.Username}}</h3>
+                    <img src="{{.ProfilePic}}" alt="Profile Picture" width="50" height="50">
+                </div>
             </li>
         {{end}}
     </ul>

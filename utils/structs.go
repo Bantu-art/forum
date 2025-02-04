@@ -54,7 +54,7 @@ type Session struct {
 }
 
 type PageData struct {
-	IsLoggedIn bool
-	Posts      []Post
-	CurrentUserID string  // Add this field
+	IsLoggedIn    bool
+	Posts         []Post
+	CurrentUserID string
 }
