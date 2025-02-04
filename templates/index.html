@@ -64,11 +64,10 @@
         <main class="main-content">
             <div class="posts-container">
                 {{range .Posts}}
+                <a href="/?id={{.ID}}" class="post-content-link">
                 <div class="post-card">
                     <div class="post-header">
                         <div class="post-avatar">
-                            <a href="/profile/{{.UserID}}" class="user-profile-link">
-
                             {{if .ProfilePic.Valid}}
                                 <img src="{{.ProfilePic.String}}" alt="Profile Picture" class="post-avatar-img">
                             {{else}}
@@ -78,23 +77,20 @@
                             {{end}}
                         </div>
                         <div class="post-info">
-                            <a href="/profile/{{.UserID}}" class="user-profile-link">
 
                             <h3>{{.Username}}</h3>
                             <span class="timestamp">{{.PostTime}}</span>
                         </div>
-                    </div>
-                    <a href="/?id={{.ID}}" class="post-content-link">
+                    </div>                 
 
                     <div class="post-content">
                         <p>{{.Content}}</p>
                         {{if .ImagePath}}
                         <img src="{{.ImagePath}}" alt="Post image" class="post-image">
                         {{end}}
-                    </div>
-                    </a>
+                    </div>                  
                 </div>
-               
+            </a>               
                 <div class="post-footer">
                     <button class="action-btn like-btn" onclick="event.stopPropagation();" data-post-id="{{.ID}}" data-action="like">
                         <i class="fas fa-heart"></i>

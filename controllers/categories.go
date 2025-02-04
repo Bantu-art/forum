@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -155,7 +154,6 @@ func (ch *CategoryHandler) handleGetPostsByCategoryName(w http.ResponseWriter, r
 		IsLoggedIn: isLoggedIn,
 		Posts:      posts,
 	}
-	fmt.Println(data)
 
 	tmpl, err := template.ParseFiles("templates/category_posts.html")
 	if err != nil {
@@ -192,7 +190,6 @@ func (ch *CategoryHandler) getPostsByCategory(categoryID string) ([]utils.Post, 
 		}
 		posts = append(posts, post)
 	}
-	fmt.Println(posts)
 
 	return posts, rows.Err()
 }

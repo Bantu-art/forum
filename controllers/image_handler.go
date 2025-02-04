@@ -2,15 +2,12 @@ package controllers
 
 import (
 	"crypto/md5"
-	"crypto/rand"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
 	"mime/multipart"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -59,25 +56,4 @@ func (ih *ImageHandler) ProcessImage(file multipart.File, header *multipart.File
 
 	// Return web-accessible path
 	return "/static/uploads/" + newFileName, nil
-}
-
-// isValidFileType checks if the file type is allowed
-func (ih *ImageHandler) isValidFileType(filename string) bool {
-	ext := strings.ToLower(filepath.Ext(filename))
-	validTypes := map[string]bool{
-		".jpg":  true,
-		".jpeg": true,
-		".png":  true,
-		".gif":  true,
-	}
-	return validTypes[ext]
-}
-
-// generateUniqueFilename creates a unique filename
-func (ih *ImageHandler) generateUniqueFilename(originalFilename string) string {
-	bytes := make([]byte, 16)
-	if _, err := rand.Read(bytes); err != nil {
-		log.Printf("Error generating random bytes: %v", err)
-	}
-	return hex.EncodeToString(bytes) + filepath.Ext(originalFilename)
 }
