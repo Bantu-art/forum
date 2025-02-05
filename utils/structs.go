@@ -53,6 +53,11 @@ type Session struct {
 	ExpiresAt time.Time
 }
 
+type ErrorPageData struct {
+	Code int
+	Message string
+}
+
 type PageData struct {
 	IsLoggedIn    bool
 	Posts         []Post

@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"html/template"
+	"log"
 	"net/http"
 
 	"forum/utils"
@@ -32,7 +33,12 @@ func InitDB(database *sql.DB) {
 
 func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
-		tmpl := template.Must(template.ParseFiles("templates/signup.html"))
+		tmpl, err := template.ParseFiles("templates/signup.html")
+		if err != nil {
+			utils.RenderErrorPage(w, http.StatusNotFound, http.StatusText(http.StatusNotFound))
+			log.Printf("Error loading template: %v", err)
+			return
+		}
 		tmpl.Execute(w, &SignUpData{})
 		return
 	}
@@ -45,13 +51,16 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		errors := SignUpErrors{}
 		hasError := false
 
-		if !utils.ValidateEmail(data.Email) {
+		if data.Email == "" {
+			errors.EmailError = "Email must be provided"
+			hasError = true
+		} else if !utils.ValidateEmail(data.Email) {
 			errors.EmailError = "Invalid email format"
 			hasError = true
 		}
 
 		if !utils.ValidateUsername(data.UserName) {
-			errors.UsernameError = "Username must be between 3 and 30 characters"
+			errors.UsernameError = "Username must be between 3 and 30 characters, must"
 			hasError = true
 		}
 
@@ -59,7 +68,7 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		confirmPassword := r.FormValue("confirm-password")
 
 		if !utils.ValidatePassword(password) {
-			errors.PasswordError = "Password must be at least 8 characters"
+			errors.PasswordError = "Password must be at least 8 characters, comprising of capital and small letters, numbers, and special characters"
 			hasError = true
 		} else if password != confirmPassword {
 			errors.PasswordError = "Passwords do not match"
@@ -96,6 +105,6 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
+	
 	http.Redirect(w, r, "/signin", http.StatusSeeOther)
 }
