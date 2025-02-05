@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"html/template"
+	"log"
 	"net/http"
 
 	"forum/utils"
@@ -94,7 +95,12 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			errors.GeneralError = "Username or email already exists"
 			data.Errors = errors
-			tmpl := template.Must(template.ParseFiles("templates/signup.html"))
+			tmpl, err := template.ParseFiles("templates/signup.html")
+			if err != nil {
+				http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+				log.Printf("Error loading template: %v", err)
+				return
+			}
 			tmpl.Execute(w, data)
 			return
 		}
