@@ -17,7 +17,13 @@ type SignInData struct {
 }
 
 func SignInHandler(w http.ResponseWriter, r *http.Request) {
-	tmpl := template.Must(template.ParseFiles("templates/signin.html"))
+	tmpl, err := template.ParseFiles("templates/signin.html")
+	// If there’s an error in loading the template (e.g. file is missing)
+	if err != nil {
+		utils.RenderErrorPage(w, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+		log.Printf("Error loading template: %v", err)
+		return
+	}
 
 	if r.Method == "GET" {
 		tmpl.Execute(w, nil)
@@ -58,8 +64,8 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				data.GeneralError = "An error occurred. Please try again later."
 			}
-			data.Username = username
-			tmpl.Execute(w, data)
+			utils.RenderErrorPage(w, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+			log.Printf("Error querying database: %v", err)
 			return
 		}
 
@@ -72,7 +78,7 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 
 		sessionToken, err := utils.CreateSession(GlobalDB, user.ID)
 		if err != nil {
-			utils.RenderErrorPage(w, http.StatusInternalServerError, "An unexpected error occurred. Please try again later.")
+			utils.RenderErrorPage(w, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 			return
 		}
 
