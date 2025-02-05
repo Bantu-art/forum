@@ -33,7 +33,12 @@ func InitDB(database *sql.DB) {
 
 func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
-		tmpl := template.Must(template.ParseFiles("templates/signup.html"))
+		tmpl, err := template.ParseFiles("templates/signup.html")
+		if err != nil {
+			utils.RenderErrorPage(w, http.StatusNotFound, http.StatusText(http.StatusNotFound))
+			log.Printf("Error loading template: %v", err)
+			return
+		}
 		tmpl.Execute(w, &SignUpData{})
 		return
 	}
@@ -95,12 +100,7 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			errors.GeneralError = "Username or email already exists"
 			data.Errors = errors
-			tmpl, err := template.ParseFiles("templates/signup.html")
-			if err != nil {
-				http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
-				log.Printf("Error loading template: %v", err)
-				return
-			}
+			tmpl := template.Must(template.ParseFiles("templates/signup.html"))
 			tmpl.Execute(w, data)
 			return
 		}
