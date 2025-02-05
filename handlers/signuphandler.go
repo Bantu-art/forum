@@ -51,11 +51,11 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		errors := SignUpErrors{}
 		hasError := false
 
-		if !utils.ValidateEmail(data.Email) && data.Email != "" {
-			errors.EmailError = "Invalid email format"
-			hasError = true
-		} else {
+		if data.Email == "" {
 			errors.EmailError = "Email must be provided"
+			hasError = true
+		} else if !utils.ValidateEmail(data.Email) {
+			errors.EmailError = "Invalid email format"
 			hasError = true
 		}
 
@@ -105,6 +105,6 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
+	
 	http.Redirect(w, r, "/signin", http.StatusSeeOther)
 }
