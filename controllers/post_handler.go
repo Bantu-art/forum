@@ -103,10 +103,20 @@ func (ph *PostHandler) displayCreateForm(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+
 	data := struct {
 		Categories []utils.Category
+		CurrentUserID string
+		IsLoggedIn bool
+
 	}{
 		Categories: categories,
+		IsLoggedIn: ph.checkAuthStatus(r),
+	}
+	if cookie, err := r.Cookie("session_token"); err == nil {
+		if userID, err := utils.ValidateSession(utils.GlobalDB, cookie.Value); err == nil {
+			data.CurrentUserID = userID
+		}
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {
@@ -383,10 +393,19 @@ func (ph *PostHandler) handleSinglePost(w http.ResponseWriter, r *http.Request) 
 	data := struct {
 		Post     *utils.Post
 		Comments []utils.Comment
+		CurrentUserID string
+		IsLoggedIn bool
 	}{
 		Post:     post,
 		Comments: comments,
+		IsLoggedIn: ph.checkAuthStatus(r),
 	}
+	if cookie, err := r.Cookie("session_token"); err == nil {
+		if userID, err := utils.ValidateSession(utils.GlobalDB, cookie.Value); err == nil {
+			data.CurrentUserID = userID
+		}
+	}
+
 
 	if err := tmpl.Execute(w, data); err != nil {
 		log.Printf("Template execution error: %v", err)
