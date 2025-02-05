@@ -53,7 +53,7 @@ type Session struct {
 	ExpiresAt time.Time
 }
 
-type ErrorData struct {
+type ErrorPageData struct {
 	Code int
 	Message string
 }
