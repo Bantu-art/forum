@@ -72,9 +72,7 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 
 		sessionToken, err := utils.CreateSession(GlobalDB, user.ID)
 		if err != nil {
-			data.GeneralError = "An error occurred. Please try again later."
-			data.Username = username
-			tmpl.Execute(w, data)
+			utils.RenderErrorPage(w, http.StatusInternalServerError, "An unexpected error occurred. Please try again later.")
 			return
 		}
 
