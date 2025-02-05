@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"forum/utils"
 )
 
 func SignOutHandler(db *sql.DB) http.HandlerFunc {
@@ -25,6 +27,11 @@ func SignOutHandler(db *sql.DB) http.HandlerFunc {
 			Value:   "",
 			Expires: time.Now().Add(-1 * time.Hour),
 		})
+
+		if err != nil {
+			utils.RenderErrorPage(w, http.StatusInternalServerError, "An unexpected error occurred. Please try again later.")
+			return
+		}
 
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
