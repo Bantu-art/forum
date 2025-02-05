@@ -20,7 +20,7 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.ParseFiles("templates/signin.html")
 	// If there’s an error in loading the template (e.g. file is missing)
 	if err != nil {
-		utils.RenderErrorPage(w, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+		utils.RenderErrorPage(w, http.StatusNotFound, http.StatusText(http.StatusNotFound))
 		log.Printf("Error loading template: %v", err)
 		return
 	}
