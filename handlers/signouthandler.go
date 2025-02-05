@@ -29,7 +29,7 @@ func SignOutHandler(db *sql.DB) http.HandlerFunc {
 		})
 
 		if err != nil {
-			utils.RenderErrorPage(w, http.StatusInternalServerError, "An unexpected error occurred. Please try again later.")
+			utils.RenderErrorPage(w, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 			return
 		}
 
