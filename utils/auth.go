@@ -2,6 +2,7 @@ package utils
 
 import (
 	"regexp"
+	"unicode"
 
 	"github.com/gofrs/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -37,13 +38,13 @@ func ValidatePassword(password string) bool {
 	hasSpecial := false
 	for _, char := range password {
 		switch {
-		case 'a' <= char && char <= 'z':
+		case unicode.IsLower(char):
 			hasLower = true
-		case 'A' <= char && char <= 'Z':
+		case unicode.IsUpper(char):
 			hasUpper = true
-		case '0' <= char && char <= '9':
+		case unicode.IsDigit(char):
 			hasNumber = true
-		case char == '@' || char == '$' || char == '!' || char == '%' || char == '*' || char == '?' || char == '&':
+		case unicode.IsPunct(char) || unicode.IsSymbol(char):
 			hasSpecial = true
 		}
 	}
