@@ -44,8 +44,8 @@
             <i class="fas fa-arrow-left"></i> Back
         </button>
 
-        <div class="single-post-container">
-            <div class="post-main-content">
+        <div class="post-container">
+            <div class="post-card">
                 <div class="post-header">
                     <div class="post-avatar">
                         {{if .Post.ProfilePic.Valid}}
@@ -62,17 +62,17 @@
                     </div>
                 </div>
 
-                <p>{{.Post.Content}}</p>
-
-                {{if .Post.ImagePath}}
-                <div class="post-image-container">
-                    <img src="{{.Post.ImagePath}}" alt="Post image">
-                </div>
+                <div class="post-content">
+                    <p>{{.Post.Content}}</p>
+                    {{if .Post.ImagePath}}
+                    <img src="{{.Post.ImagePath}}" alt="Post image" class="post-image">
                 {{end}}
+
+                </div>
             </div>
 
             <!-- Reaction Buttons -->
-            <div class="reaction-buttons">
+            <div class="post-footer">
                 <button class="action-btn like-btn" data-post-id="{{.Post.ID}}" data-action="like">
                     <i class="fas fa-heart"></i>
                     <span class="count" id="likes-{{.Post.ID}}">{{.Post.Likes}}</span>
