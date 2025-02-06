@@ -169,7 +169,7 @@ func (ph *PostHandler) handleGetPosts(w http.ResponseWriter, r *http.Request) {
 
 func (ph *PostHandler) getAllPosts() ([]utils.Post, error) {
 	rows, err := utils.GlobalDB.Query(`
-        SELECT p.id, p.user_id, p.title, p.content, p.imagepath, 
+        SELECT DISTINCT p.id, p.user_id, p.title, p.content, p.imagepath, 
                p.post_at, p.likes, p.dislikes, p.comments,
                u.username, u.profile_pic, c.id AS category_id, c.name AS category_name
         FROM posts p
@@ -553,7 +553,6 @@ func (ph *PostHandler) handleReactions(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ph *PostHandler) handleComment(w http.ResponseWriter, r *http.Request) {
-
 	userID := r.Context().Value("userID").(string)
 	if userID == "" {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
