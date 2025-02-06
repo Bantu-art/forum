@@ -272,14 +272,15 @@ func (ph *PostHandler) handleCreatePost(w http.ResponseWriter, r *http.Request) 
 	// Handle image upload
 	var imagePath string
 	file, header, err := r.FormFile("image")
-	if err == nil {
-		defer file.Close()
-		// To check
-		imagePath, err = ph.imageHandler.ProcessImage(file, header)
-		if err != nil {
-			log.Printf("Error processing image: %v", err)
-		}
-	}
+if err == nil {
+    defer file.Close()
+    imagePath, err = ph.imageHandler.ProcessImage(file, header)
+    if err != nil {
+        log.Printf("Error processing image: %v", err)
+        utils.RenderErrorPage(w, http.StatusBadRequest, err.Error())
+        return
+    }
+}
 
 	// Prepare the insert statement with image support
 	stmt, err := utils.GlobalDB.Prepare(`

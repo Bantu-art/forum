@@ -97,12 +97,12 @@ func (ph *ProfileHandler) handleProfileUpdate(w http.ResponseWriter, r *http.Req
 	}
 
 	file, header, err := r.FormFile("profile_pic")
-	if err != nil {
-		log.Printf("Error getting profile pic: %v", err)
-		http.Error(w, "Error uploading image", http.StatusBadRequest)
-		return
-	}
-	defer file.Close()
+if err != nil {
+    log.Printf("Error getting profile pic: %v", err)
+    utils.RenderErrorPage(w, http.StatusBadRequest, utils.ErrFileUpload)
+    return
+}
+defer file.Close()
 
 	// Validate file type
 	if !isValidImageType(header.Header.Get("Content-Type")) {
@@ -120,11 +120,11 @@ func (ph *ProfileHandler) handleProfileUpdate(w http.ResponseWriter, r *http.Req
 
 	// Process new image
 	imagePath, err := ph.imageHandler.ProcessImage(file, header)
-	if err != nil {
-		log.Printf("Error processing image: %v", err)
-		http.Error(w, "Error processing image", http.StatusInternalServerError)
-		return
-	}
+if err != nil {
+    log.Printf("Error processing image: %v", err)
+    utils.RenderErrorPage(w, http.StatusBadRequest, err.Error())
+    return
+}
 
 	log.Printf("New image path: %s", imagePath)
 

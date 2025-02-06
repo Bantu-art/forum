@@ -19,6 +19,8 @@ const (
 	ErrFileUpload       = "Error uploading file. Please try again."
 	ErrPageNotFound     = "Page not found"
 	ErrTemplateExec     = "We're experiencing technical difficulties. Please try again later."
+	ErrFileTooLarge    = "File size exceeds the 10MB limit. Please upload a smaller image."
+    ErrInvalidFileType = "Invalid file type. Only JPEG, PNG, and GIF images are allowed."
 
 )
 
