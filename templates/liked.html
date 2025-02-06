@@ -13,7 +13,7 @@
             <h1 class="logo">Forum</h1>
             <div class="nav-right">
                 <button id="create-post-btn" class="btn btn-primary" onclick="window.location.href='/create'">
-                    <i class="fas fa-plus"></i> Create Post
+                    <i class="fas fa-plus"></i>
                 </button>
                 <button id="theme-toggle" class="theme-toggle">
                     <i class="fas fa-moon"></i>
@@ -27,14 +27,14 @@
             </div>
         </div>
     </nav>
+    <h2 class="page-title">Posts you've liked</h2>
+    <button class="back-button" onclick="window.location.href='/'">
+        <i class="fas fa-arrow-left"></i> Back
+    </button>
+
 
     <main class="main-content">
-        <button class="back-button" onclick="window.location.href='/'">
-            <i class="fas fa-arrow-left"></i> Back
-        </button>
-        
-        <h2 class="page-title">Posts you've liked</h2>
-
+      
         {{if .Posts}}
             {{range .Posts}}
             <div class="single-post-container">

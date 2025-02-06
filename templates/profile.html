@@ -12,15 +12,27 @@
         <div class="nav-container">
             <h1 class="logo">Forum</h1>
             <div class="nav-right">
+                <button id="create-post-btn" class="btn btn-primary" onclick="window.location.href='/create'">
+                    <i class="fas fa-plus"></i>
+                </button>
                 <button id="theme-toggle" class="theme-toggle">
                     <i class="fas fa-moon"></i>
                 </button>
-                <button class="btn btn-primary" onclick="window.location.href='/'">
-                    <i class="fas fa-home"></i> Home
+                {{if not .IsLoggedIn}}
+                    <button class="btn btn-outline" onclick="window.location.href='/signin'">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                    <button class="btn btn-primary" onclick="window.location.href='/signup'">
+                        <i class="fas fa-user-plus"></i> Sign Up
+                    </button>
+                {{else}}
+                <button class="btn btn-outline" onclick="window.location.href='/profile/{{.CurrentUserID}}'">
+                    <i class="fas fa-user"></i> Profile
                 </button>
-                <button class="btn btn-primary" onclick="window.location.href='/logout'">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </button>
+                    <button class="btn btn-primary" onclick="window.location.href='/signout'">
+                        <i class="fas fa-sign-out-alt"></i> Sign Out
+                    </button>
+                {{end}}
             </div>
         </div>
     </nav>

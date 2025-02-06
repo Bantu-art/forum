@@ -13,7 +13,7 @@
             <h1 class="logo">Forum</h1>
             <div class="nav-right">
                 <button id="create-post-btn" class="btn btn-primary" onclick="window.location.href='/create'">
-                    <i class="fas fa-plus"></i> Create Post
+                    <i class="fas fa-plus"></i>
                 </button>
                 <button id="theme-toggle" class="theme-toggle">
                     <i class="fas fa-moon"></i>
@@ -37,8 +37,8 @@
 
         {{if .Posts}}
             {{range .Posts}}
-            <div class="single-post-container">
-                <div class="post-main-content">
+            <div class="posts-container">
+                <div class="post-card">
                     <div class="post-header">
                         <div class="post-avatar">
                             {{if .ProfilePic.Valid}}
@@ -58,14 +58,12 @@
                         </a>
                     </div>
                     
-                    <h4 class="post-title">{{.Title}}</h4>
-                    <p>{{.Content}}</p>
-                    
-                    {{if .ImagePath}}
-                    <div class="post-image-container">
-                        <img src="{{.ImagePath}}" alt="Post image">
-                    </div>
-                    {{end}}
+                    <div class="post-content">
+                        <p>{{.Content}}</p>
+                        {{if .ImagePath}}
+                        <img src="{{.ImagePath}}" alt="Post image" class="post-image">
+                        {{end}}
+                    </div> 
 
                     {{if .CategoryName}}
                     <div class="post-category">
@@ -74,19 +72,20 @@
                     {{end}}
                 </div>
 
-                <div class="reaction-buttons">
-                    <button class="action-btn like-btn" data-post-id="{{.ID}}" data-action="like">
+                <div class="post-footer">
+                    <button class="action-btn like-btn" onclick="event.stopPropagation();" data-post-id="{{.ID}}" data-action="like">
                         <i class="fas fa-heart"></i>
                         <span class="count" id="likes-{{.ID}}">{{.Likes}}</span>
                     </button>
-                    <button class="action-btn dislike-btn" data-post-id="{{.ID}}" data-action="dislike">
+                    <button class="action-btn dislike-btn" onclick="event.stopPropagation();" data-post-id="{{.ID}}" data-action="dislike">
                         <i class="fas fa-thumbs-down"></i>
                         <span class="count" id="dislikes-{{.ID}}">{{.Dislikes}}</span>
                     </button>
-                    <!-- <button class="action-btn comment-btn" onclick="window.location.href='/post/{{.ID}}'">
+                    <!-- Comment Button with Redirect -->
+                    <button class="action-btn comment-btn"  data-post-id="{{.ID}}" onclick="window.location.href='/?id={{.ID}}'">
                         <i class="fas fa-comment"></i>
-                        <span class="count">{{.Comments}}</span> -->
-                    <!-- </button> --> 
+                        <span class="count" id="comments-{{.ID}}">{{.Comments}}</span>
+                    </button>
                 </div>
             </div>
             {{end}}
