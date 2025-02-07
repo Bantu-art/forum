@@ -170,7 +170,9 @@ func (ch *CategoryHandler) handleGetPostsByCategoryName(w http.ResponseWriter, r
 
 func (ch *CategoryHandler) getPostsByCategory(categoryID string) ([]utils.Post, error) {
 	rows, err := utils.GlobalDB.Query(`
-        SELECT p.id, p.title, p.content, p.imagepath, u.username, u.profile_pic
+        SELECT p.id, p.title, p.content, p.imagepath, u.username, u.profile_pic,
+               (SELECT COUNT(*) FROM reaction WHERE post_id = p.id AND likes = 1) AS Likes,
+               (SELECT COUNT(*) FROM reaction WHERE post_id = p.id AND dislikes = 0) AS Dislikes
         FROM posts p
         JOIN post_categories pc ON p.id = pc.post_id
         JOIN users u ON p.user_id = u.id
@@ -184,7 +186,7 @@ func (ch *CategoryHandler) getPostsByCategory(categoryID string) ([]utils.Post, 
 	var posts []utils.Post
 	for rows.Next() {
 		var post utils.Post
-		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.ImagePath, &post.Username, &post.ProfilePic); err != nil {
+		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.ImagePath, &post.Username, &post.ProfilePic, &post.Likes, &post.Dislikes); err != nil {
 			log.Printf("Error scanning post: %v", err)
 			continue
 		}
@@ -196,10 +198,12 @@ func (ch *CategoryHandler) getPostsByCategory(categoryID string) ([]utils.Post, 
 
 func (ch *CategoryHandler) getPostsByCategoryName(categoryName string) ([]utils.Post, error) {
 	rows, err := utils.GlobalDB.Query(`
-        SELECT p.id, p.title, p.content, p.imagepath, u.username, u.profile_pic
+        SELECT p.id, p.title, p.content, p.imagepath, u.username, u.profile_pic,
+               (SELECT COUNT(*) FROM reaction WHERE post_id = p.id AND likes = 1) AS Likes,
+               (SELECT COUNT(*) FROM reaction WHERE post_id = p.id AND dislikes = 0) AS Dislikes
         FROM posts p
         JOIN post_categories pc ON p.id = pc.post_id
-		JOIN users u ON p.user_id = u.id
+        JOIN users u ON p.user_id = u.id
         JOIN categories c ON pc.category_id = c.name
         WHERE c.name = ?
     `, categoryName)
@@ -211,7 +215,7 @@ func (ch *CategoryHandler) getPostsByCategoryName(categoryName string) ([]utils.
 	var posts []utils.Post
 	for rows.Next() {
 		var post utils.Post
-		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.ImagePath, &post.Username, &post.ProfilePic); err != nil {
+		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.ImagePath, &post.Username, &post.ProfilePic, &post.Likes, &post.Dislikes); err != nil {
 			log.Printf("Error scanning post: %v", err)
 			continue
 		}
