@@ -139,8 +139,8 @@
                 
                 <div class="input-block">
                     <label for="username" class="input-label">Username</label>
-                    <input type="text" name="username" id="username" class="input-field" required>
-                    <div class="validation-message" id="username-error">
+                    <input type="text" name="username" id="username" class="input-field" required placeholder="Input name">
+                    <div class="validation-message" id="username-error" >
                         {{if .UsernameError}}
                         {{.UsernameError}}
                         {{end}}
@@ -149,7 +149,7 @@
     
                 <div class="input-block">
                     <label for="password" class="input-label">Password</label>
-                    <input type="password" name="password" id="password" class="input-field" required>
+                    <input type="password" name="password" id="password" class="input-field" required placeholder="Input password">
                     <div class="validation-message" id="password-error">
                         {{if .PasswordError}}
                         {{.PasswordError}}
