@@ -11,9 +11,12 @@
     <nav class="navbar">
         <div class="nav-container">
             <h1 class="logo">Forum</h1>
+            <button class="hamburger-btn">
+                <i class="fas fa-bars"></i>
+            </button>
             <div class="nav-right">
                 <button id="create-post-btn" class="btn btn-primary" onclick="window.location.href='/create'">
-                    <i class="fas fa-plus"></i> Create Post
+                    <i class="fas fa-plus"></i>
                 </button>
                 <button id="theme-toggle" class="theme-toggle">
                     <i class="fas fa-moon"></i>
@@ -27,78 +30,54 @@
             </div>
         </div>
     </nav>
-
     <main class="main-content">
-        <button class="back-button" onclick="window.location.href='/'">
-            <i class="fas fa-arrow-left"></i> Back
-        </button>
-        
-        <h2 class="page-title">Posts you've liked</h2>
-
-        {{if .Posts}}
+           
+        <div class="posts-container">
             {{range .Posts}}
-            <div class="single-post-container">
-                <div class="post-main-content">
-                    <div class="post-header">
-                        <div class="post-avatar">
-                            {{if .ProfilePic.Valid}}
-                                <img src="{{.ProfilePic.String}}" alt="Profile Picture" class="post-avatar-img">
-                            {{else}}
-                                <div class="post-avatar-placeholder">
-                                    <i class="fas fa-user"></i>
-                                </div>
-                            {{end}}
-                        </div>
-                        <div class="post-info">
-                            <h3>{{.Username}}</h3>
-                            <span class="timestamp">{{.PostTime}}</span>
-                        </div>
-                        <a href="/?id={{.ID}}" class="view-post-link">
-                            <i class="fas fa-external-link-alt"></i> View Full Post
-                        </a>
+            <a href="/?id={{.ID}}" class="post-content-link">
+            <div class="post-card">
+                <div class="post-header">
+                    <div class="post-avatar">
+                        {{if .ProfilePic.Valid}}
+                            <img src="{{.ProfilePic.String}}" alt="Profile Picture" class="post-avatar-img">
+                        {{else}}
+                            <div class="post-avatar-placeholder">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        {{end}}
                     </div>
-                    
-                    <h4 class="post-title">{{.Title}}</h4>
+                    <div class="post-info">
+
+                        <h3>{{.Username}}</h3>
+                        <span class="timestamp">{{.PostTime}}</span>
+                    </div>
+                </div>                 
+
+                <div class="post-content">
                     <p>{{.Content}}</p>
-                    
                     {{if .ImagePath}}
-                    <div class="post-image-container">
-                        <img src="{{.ImagePath}}" alt="Post image">
-                    </div>
+                    <img src="{{.ImagePath}}" alt="Post image" class="post-image">
                     {{end}}
-
-                    {{if .CategoryName}}
-                    <div class="post-category">
-                        <i class="fas fa-tag"></i> {{.CategoryName}}
-                    </div>
-                    {{end}}
-                </div>
-
-                <div class="reaction-buttons">
-                    <button class="action-btn like-btn" data-post-id="{{.ID}}" data-action="like">
-                        <i class="fas fa-heart"></i>
-                        <span class="count" id="likes-{{.ID}}">{{.Likes}}</span>
-                    </button>
-                    <button class="action-btn dislike-btn" data-post-id="{{.ID}}" data-action="dislike">
-                        <i class="fas fa-thumbs-down"></i>
-                        <span class="count" id="dislikes-{{.ID}}">{{.Dislikes}}</span>
-                    </button>
-                    <!-- <button class="action-btn comment-btn" onclick="window.location.href='/post/{{.ID}}'">
-                        <i class="fas fa-comment"></i>
-                        <span class="count">{{.Comments}}</span> -->
-                    <!-- </button> --> 
-                </div>
+                </div>                  
             </div>
-            {{end}}
-        {{else}}
-            <div class="no-posts-message">
-                <i class="fas fa-pencil-alt"></i>
-                <p>You haven't liked any posts yet.</p>
-                <button class="btn btn-primary" onclick="window.location.href='/'">
-                     Like Your First Post
+        </a>               
+            <div class="post-footer">
+                <button class="action-btn like-btn" onclick="event.stopPropagation();" data-post-id="{{.ID}}" data-action="like">
+                    <i class="fas fa-heart"></i>
+                    <span class="count" id="likes-{{.ID}}">{{.Likes}}</span>
+                </button>
+                <button class="action-btn dislike-btn" onclick="event.stopPropagation();" data-post-id="{{.ID}}" data-action="dislike">
+                    <i class="fas fa-thumbs-down"></i>
+                    <span class="count" id="dislikes-{{.ID}}">{{.Dislikes}}</span>
+                </button>
+                <!-- Comment Button with Redirect -->
+                <button class="action-btn comment-btn"  data-post-id="{{.ID}}" onclick="window.location.href='/?id={{.ID}}'">
+                    <i class="fas fa-comment"></i>
+                    <span class="count" id="comments-{{.ID}}">{{.Comments}}</span>
                 </button>
             </div>
-        {{end}}
+            {{end}}
+        </div>
     </main>
    
     <script src="static/like.js" type="text/javascript"></script>
