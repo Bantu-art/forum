@@ -2,6 +2,7 @@ package utils
 
 import (
 	"regexp"
+	"unicode"
 
 	"github.com/gofrs/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -28,7 +29,26 @@ func ValidateUsername(username string) bool {
 }
 
 func ValidatePassword(password string) bool {
-	return len(password) >= 8
+	if len(password) < 8 {
+		return false
+	}
+	hasLower := false
+	hasUpper := false
+	hasNumber := false
+	hasSpecial := false
+	for _, char := range password {
+		switch {
+		case unicode.IsLower(char):
+			hasLower = true
+		case unicode.IsUpper(char):
+			hasUpper = true
+		case unicode.IsDigit(char):
+			hasNumber = true
+		case unicode.IsPunct(char) || unicode.IsSymbol(char):
+			hasSpecial = true
+		}
+	}
+	return hasLower && hasUpper && hasNumber && hasSpecial
 }
 
 func GenerateId() string {

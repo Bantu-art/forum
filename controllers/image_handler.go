@@ -2,16 +2,15 @@ package controllers
 
 import (
 	"crypto/md5"
-	"crypto/rand"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
 	"mime/multipart"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
+
+	"forum/utils"
 )
 
 const (
@@ -35,6 +34,9 @@ func NewImageHandler() *ImageHandler {
 
 // ProcessImage handles the image upload process
 func (ih *ImageHandler) ProcessImage(file multipart.File, header *multipart.FileHeader) (string, error) {
+	if err := utils.ValidateImage(file, header); err != nil {
+		return "", err
+	}
 	// Generate unique filename
 	ext := filepath.Ext(header.Filename)
 	newFileName := fmt.Sprintf("%x%s", md5.Sum([]byte(time.Now().String())), ext)
@@ -54,30 +56,10 @@ func (ih *ImageHandler) ProcessImage(file multipart.File, header *multipart.File
 	defer dst.Close()
 
 	if _, err = io.Copy(dst, file); err != nil {
+		os.Remove(filePath) // Clean up on error
 		return "", err
 	}
 
 	// Return web-accessible path
 	return "/static/uploads/" + newFileName, nil
-}
-
-// isValidFileType checks if the file type is allowed
-func (ih *ImageHandler) isValidFileType(filename string) bool {
-	ext := strings.ToLower(filepath.Ext(filename))
-	validTypes := map[string]bool{
-		".jpg":  true,
-		".jpeg": true,
-		".png":  true,
-		".gif":  true,
-	}
-	return validTypes[ext]
-}
-
-// generateUniqueFilename creates a unique filename
-func (ih *ImageHandler) generateUniqueFilename(originalFilename string) string {
-	bytes := make([]byte, 16)
-	if _, err := rand.Read(bytes); err != nil {
-		log.Printf("Error generating random bytes: %v", err)
-	}
-	return hex.EncodeToString(bytes) + filepath.Ext(originalFilename)
 }

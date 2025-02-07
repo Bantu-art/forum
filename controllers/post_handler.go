@@ -14,6 +14,7 @@ import (
 	"forum/utils"
 )
 
+
 type PostHandler struct {
 	imageHandler *ImageHandler
 }
@@ -55,13 +56,13 @@ func (ph *PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		case http.MethodPost:
 			ph.authMiddleware(ph.handleCreatePost).ServeHTTP(w, r)
 		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+            utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
 		}
 	case "/react":
 		if r.Method == http.MethodPost {
 			ph.authMiddleware(ph.handleReactions).ServeHTTP(w, r)
 		} else {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+            utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
 		}
 	case "/":
 		if r.Method == http.MethodGet {
@@ -75,16 +76,16 @@ func (ph *PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			ph.authMiddleware(ph.handleComment).ServeHTTP(w, r)
 		} else {
-			http.Error(w, "Method not alloweds", http.StatusMethodNotAllowed)
+            utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
 		}
 	case "/commentreact":
 		if r.Method == http.MethodPost {
 			ph.authMiddleware(ph.handleCommentReactions).ServeHTTP(w, r)
 		} else {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+            utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
 		}
 	default:
-		http.NotFound(w, r)
+		utils.RenderErrorPage(w, http.StatusNotFound, utils.ErrPageNotFound)
 	}
 }
 
@@ -92,27 +93,38 @@ func (ph *PostHandler) displayCreateForm(w http.ResponseWriter, r *http.Request)
 	categories, err := ph.getAllCategories()
 	if err != nil {
 		log.Printf("Error fetching categories: %v", err)
-		http.Error(w, "Error loading categories", http.StatusInternalServerError)
+        utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrCategoryLoad)
 		return
 	}
 
 	tmpl, err := template.ParseFiles("templates/createpost.html")
 	if err != nil {
 		log.Printf("Error parsing create form template: %v", err)
-		http.Error(w, "Error loading template", http.StatusInternalServerError)
+        utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateLoad)
 		return
 	}
 
+
 	data := struct {
 		Categories []utils.Category
+		CurrentUserID string
+		IsLoggedIn bool
+
 	}{
 		Categories: categories,
+		IsLoggedIn: ph.checkAuthStatus(r),
+	}
+	if cookie, err := r.Cookie("session_token"); err == nil {
+		if userID, err := utils.ValidateSession(utils.GlobalDB, cookie.Value); err == nil {
+			data.CurrentUserID = userID
+		}
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {
-		log.Printf("Error executing create form template: %v", err)
-		http.Error(w, "Error loading template", http.StatusInternalServerError)
-	}
+    log.Printf("Error executing create form template: %v", err)
+    utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateExec)
+    return
+}
 }
 
 func (ph *PostHandler) getAllCategories() ([]utils.Category, error) {
@@ -139,7 +151,7 @@ func (ph *PostHandler) handleGetPosts(w http.ResponseWriter, r *http.Request) {
 	posts, err := ph.getAllPosts()
 	if err != nil {
 		log.Printf("Error fetching posts: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateExec)
 		return
 	}
 
@@ -157,19 +169,19 @@ func (ph *PostHandler) handleGetPosts(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.ParseFiles("templates/index.html")
 	if err != nil {
 		log.Printf("Error parsing template: %v", err)
-		http.Error(w, "Error loading template", http.StatusInternalServerError)
+        utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateLoad)
 		return
 	}
 
 	if err := tmpl.Execute(w, pageData); err != nil {
 		log.Printf("Error executing template: %v", err)
-		http.Error(w, "Error loading template", http.StatusInternalServerError)
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateExec)
 	}
 }
 
 func (ph *PostHandler) getAllPosts() ([]utils.Post, error) {
 	rows, err := utils.GlobalDB.Query(`
-        SELECT p.id, p.user_id, p.title, p.content, p.imagepath, 
+        SELECT DISTINCT p.id, p.user_id, p.title, p.content, p.imagepath, 
                p.post_at, p.likes, p.dislikes, p.comments,
                u.username, u.profile_pic, c.id AS category_id, c.name AS category_name
         FROM posts p
@@ -235,13 +247,13 @@ func (ph *PostHandler) handleCreatePost(w http.ResponseWriter, r *http.Request) 
 	// Get userID from context
 	userID := r.Context().Value("userID").(string)
 	if userID == "" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        utils.RenderErrorPage(w, http.StatusUnauthorized, utils.ErrUnauthorized)
 		return
 	}
 
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		log.Printf("Error parsing form: %v", err)
-		http.Error(w, "Error processing form", http.StatusBadRequest)
+        utils.RenderErrorPage(w, http.StatusBadRequest, utils.ErrInvalidForm)
 		return
 	}
 
@@ -254,20 +266,21 @@ func (ph *PostHandler) handleCreatePost(w http.ResponseWriter, r *http.Request) 
 
 	if title == "" || content == "" || len(categories) == 0 {
 		log.Printf("Title, content, and category are required")
-		http.Error(w, "Title, content, and category are required", http.StatusBadRequest)
+        utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrInvalidForm)
 		return
 	}
 	// Handle image upload
 	var imagePath string
 	file, header, err := r.FormFile("image")
-	if err == nil {
-		defer file.Close()
-		imagePath, err = ph.imageHandler.ProcessImage(file, header)
-		if err != nil {
-			log.Printf("Error processing image: %v", err)
-			// Continue without image if there's an error
-		}
-	}
+if err == nil {
+    defer file.Close()
+    imagePath, err = ph.imageHandler.ProcessImage(file, header)
+    if err != nil {
+        log.Printf("Error processing image: %v", err)
+        utils.RenderErrorPage(w, http.StatusBadRequest, err.Error())
+        return
+    }
+}
 
 	// Prepare the insert statement with image support
 	stmt, err := utils.GlobalDB.Prepare(`
@@ -276,7 +289,7 @@ func (ph *PostHandler) handleCreatePost(w http.ResponseWriter, r *http.Request) 
     `)
 	if err != nil {
 		log.Printf("Error preparing statement: %v", err)
-		http.Error(w, "Error creating post", http.StatusInternalServerError)
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateExec)
 		return
 	}
 	defer stmt.Close()
@@ -286,7 +299,7 @@ func (ph *PostHandler) handleCreatePost(w http.ResponseWriter, r *http.Request) 
 	result, err := stmt.Exec(userID, title, content, imagePath, currentTime)
 	if err != nil {
 		log.Printf("Error executing insert: %v", err)
-		http.Error(w, "Error creating post", http.StatusInternalServerError)
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateExec)
 		return
 	}
 
@@ -356,40 +369,49 @@ func (ph *PostHandler) handleSinglePost(w http.ResponseWriter, r *http.Request) 
 	postID, err := strconv.ParseInt(postIDStr, 10, 64)
 	if err != nil {
 		log.Printf("Invalid post ID: %v", err)
-		http.Error(w, "Invalid post ID", http.StatusBadRequest)
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrPostNotFound)
 		return
 	}
 
 	post, comments, err := ph.getPostByID(postID)
 	if err != nil {
 		log.Printf("Error fetching post: %v", err)
-		http.Error(w, "Error fetching post", http.StatusInternalServerError)
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrPostNotFound)
 		return
 	}
 
 	if post == nil {
 		log.Printf("Post not found: %d", postID)
-		http.Error(w, "Post not found", http.StatusNotFound)
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrPostNotFound)
 		return
 	}
 
 	tmpl, err := template.ParseFiles("templates/post.html")
 	if err != nil {
 		log.Printf("Template parsing error: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateExec)
 		return
 	}
 
 	data := struct {
 		Post     *utils.Post
 		Comments []utils.Comment
+		CurrentUserID string
+		IsLoggedIn bool
 	}{
 		Post:     post,
 		Comments: comments,
+		IsLoggedIn: ph.checkAuthStatus(r),
+	}
+	if cookie, err := r.Cookie("session_token"); err == nil {
+		if userID, err := utils.ValidateSession(utils.GlobalDB, cookie.Value); err == nil {
+			data.CurrentUserID = userID
+		}
 	}
 
+
 	if err := tmpl.Execute(w, data); err != nil {
-		log.Printf("Template execution error: %v", err)
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateExec)
 	}
 }
 
@@ -553,7 +575,6 @@ func (ph *PostHandler) handleReactions(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ph *PostHandler) handleComment(w http.ResponseWriter, r *http.Request) {
-
 	userID := r.Context().Value("userID").(string)
 	if userID == "" {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
