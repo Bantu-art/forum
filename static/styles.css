@@ -20,9 +20,7 @@ body {
 
 /* Mobile-first navbar styling */
 .navbar {
-    /* background-color: var(--secondary-background); */
     background-image: url('images/MuchaTseBle.jpeg');
-    border-bottom: 1px solid var(--border-color);
     padding: 12px 20px;
     position: sticky;
     top: 0;
@@ -69,7 +67,7 @@ body {
     right: -100%;
     width: 280px;
     height: 100vh;
-    background-color: var(--secondary-background);
+    background-image: url('images/MuchaTseBle.jpeg');
     padding: 80px 20px 20px;
     display: flex;
     flex-direction: column;
@@ -137,7 +135,7 @@ body {
     align-items: center;
     justify-content: space-between;
     cursor: pointer;
-    color: var(--text-color);
+    color: white;
     font-weight: 500;
     margin-bottom: 10px;
 }
@@ -173,7 +171,7 @@ body {
     display: block;
     padding: 10px 12px;
     text-decoration: none;
-    color: var(--text-color);
+    color: white;
     border-radius: 8px;
     transition: background-color 0.2s ease;
 }
@@ -351,56 +349,62 @@ body {
 
 .post-footer {
     padding: 12px 16px;
-    background-image: url('images/MuchaTseBle.jpeg');
-    border-radius: 12px;
     margin-bottom: 80px;
     display: flex;
     align-items: center;
-    gap: 20px;
-    border-top: 1px solid var(--border-color);
-}
-
-.action-btn {
+    justify-content: space-between;
+    gap: 16px;
+  }
+  
+  .action-container {
+    flex: 1;
+    background-image: url('images/MuchaTseBle.jpeg');
+    background-size: cover;
+    background-position: center;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  
+  .action-btn {
+    width: 100%;
     background: none;
-    
     border: none;
     padding: 8px;
     display: flex;
     align-items: center;
-    gap: 60px;
+    justify-content: center;
+    gap: 8px;
     cursor: pointer;
     color: white;
     font-size: 14px;
-    border-radius: 8px;
     transition: all 0.2s ease;
-}
-
-.action-btn i {
+  }
+  
+  .action-btn:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+  
+  .action-btn i {
     font-size: 20px;
     transition: transform 0.2s ease;
-}
-
-.action-btn:hover {
-    background-color: rgba(0, 149, 246, 0.1);
-    color: var(--accent-color);
-}
-
-.action-btn:hover i {
+  }
+  
+  .action-btn:hover i {
     transform: scale(1.1);
-}
-
-.like-btn:hover i {
+  }
+  
+  .like-btn:hover i {
     color: #ed4956;
-}
-
-.comment-btn:hover i {
+  }
+  
+  .comment-btn:hover i {
     color: var(--accent-color);
-}
-
-.count {
+  }
+  
+  .count {
     font-weight: 600;
     min-width: 20px;
-}
+  }
 
 /* Add smooth loading animation */
 @keyframes fadeIn {
@@ -429,56 +433,239 @@ body {
     padding-top: 15px;
 }
 
-.comment-form {
+.comment-form-container {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(800px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .comment-form-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('images/MuchaTseBle.jpeg');
+    background-size: cover;
+    opacity: 0.1;
+    z-index: -1;
+  }
+  
+  .comment-form {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.comment-input {
+    gap: 15px;
+    position: relative;
+  }
+  
+  .comment-form h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: black;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .comment-input {
     width: 100%;
     min-height: 80px;
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 8px;
-    padding: 10px;
+    padding: 12px;
     resize: vertical;
-}
-
-.comment {
-    border-top: 1px solid var(--border-color);
+    color: black;
+    transition: all 0.3s ease;
+  }
+  
+  .comment-input:focus {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    outline: none;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  }
+  
+  .comment-input::placeholder {
+    color: white;
+  }
+  
+  .submit-button {
+    background: rgba(54, 49, 49, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(4px);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+  }
+  
+  .submit-button:hover {
+    background: black;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+  }
+  
+  .comments-section {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .comments-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('images/MuchaTseBle.jpeg');
+    background-size: cover;
+    opacity: 0.1;
+    z-index: -1;
+  }
+  
+  .comment {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
     padding: 15px 0;
-}
-
-.comment-header {
+    color: white;
+    transition: transform 0.3s ease;
+  }
+  
+  .comment:hover {
+    transform: translateX(5px);
+  }
+  
+  .comment:first-child {
+    border-top: none;
+  }
+  
+  .comment-header {
     display: flex;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
+  }
+.comment-avatar-placeholder{
+    left: 100px;
 }
-
-.comment-author {
+  
+  .comment-author {
     display: flex;
     flex-direction: column;
-}
-
-.comment-author strong {
+    gap: 4px;
+  }
+  
+  .comment-author strong {
     font-size: 14px;
-}
-
-.comment-time {
-    color: var(--light-gray);
+    color: black;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+  
+  .comment-time {
+    color: black;
     font-size: 12px;
-}
+  }
+  
+  .comment-content {
+    color: black;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 8px 0;
+  }
+
+  /* Avatar placeholder styling */
+.comment-avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+  }
+  
+  .comment-avatar-placeholder i {
+    font-size: 20px;
+    color: rgba(0, 0, 0, 0.5);
+  }
+  
+  /* Comment reaction buttons container */
+  .comment-reaction-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  
+  /* Individual reaction container */
+  .comment-reaction-buttons .action-container {
+    background-image: url('images/MuchaTseBle.jpeg');
+    border-radius: 6px;
+    overflow: hidden;
+    height: 32px;
+  }
+  
+  /* Reaction buttons */
+  .comment-reaction-buttons .action-btn {
+    height: 100%;
+    padding: 0 12px;
+    font-size: 12px;
+    gap: 6px;
+  }
+  
+  .comment-reaction-buttons .action-btn i {
+    font-size: 14px;
+  }
+  
+  /* Count for reactions */
+  .comment-reaction-buttons .count {
+    font-size: 12px;
+    min-width: 16px;
+  }
+  
+  /* Hover effects */
+  .comment-reaction-buttons .action-btn:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+  
+  .comment-reaction-buttons .like-btn:hover i {
+    color: #ed4956;
+  }
+  
+  .comment-reaction-buttons .dislike-btn:hover i {
+    color: #4a5568;
+  }
 
 .back-button {
     background: none;
+    background-image: url('images/MuchaTseBle.jpeg');
+    border-radius: 50px;
     border: none;
-    color: var(--text-color);
+    color: white;
     padding: 10px 20px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 20px;
 }
 
 .theme-toggle {
@@ -574,7 +761,7 @@ body {
 }
 
 .categories-filter-container a:hover {
-    background-color: var(--accent-color);
+    background-color: black;
     color: white;
 }
 
@@ -589,7 +776,7 @@ body {
     }
 }
 
-/* created post page */
+/* create post page */
 .create-post-form {
     width: 90%;
     max-width: 800px;
