@@ -910,3 +910,77 @@ body {
   input[type="file"] {
     display: none;
   }
+
+   .page-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #444;
+        }
+
+        .profile-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .profile-pic-section {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .profile-pic {
+            width: 100%;
+            height: auto;
+        }
+
+        .profile-pic-placeholder {
+            font-size: 4rem;
+            color: #bbb;
+        }
+
+        .profile-info {
+            text-align: left;
+        }
+
+        .profile-name {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .profile-email {
+            color: #666;
+        }
+
+        .profile-actions {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .change-photo-link {
+            display: inline-block;
+            cursor: pointer;
+            color: #007BFF;
+            text-decoration: underline;
+        }
+
+        .change-photo-link:hover {
+            text-decoration: none;
+        }
