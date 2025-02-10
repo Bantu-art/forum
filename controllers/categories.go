@@ -24,17 +24,17 @@ func (ch *CategoryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		} else {
 			utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
 		}
-	case "/categories/posts":
-		if r.Method == http.MethodGet {
-			categoryID := r.URL.Query().Get("id")
-			if categoryID == "" {
-				utils.RenderErrorPage(w, http.StatusBadRequest, utils.ErrInvalidForm)
-				return
-			}
-			ch.handleGetPostsByCategory(w, r, categoryID)
-		} else {
-			utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
-		}
+	// case "/categories/posts":
+	// 	if r.Method == http.MethodGet {
+	// 		categoryID := r.URL.Query().Get("id")
+	// 		if categoryID == "" {
+	// 			utils.RenderErrorPage(w, http.StatusBadRequest, utils.ErrInvalidForm)
+	// 			return
+	// 		}
+	// 		ch.handleGetPostsByCategory(w, r, categoryID)
+	// 	} else {
+	// 		utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
+	// 	}
 	case "/category":
 		if r.Method == http.MethodGet {
 			categoryName := r.URL.Query().Get("name")
@@ -112,33 +112,33 @@ func (ch *CategoryHandler) handleCreateCategory(w http.ResponseWriter, r *http.R
 	http.Redirect(w, r, "/categories", http.StatusSeeOther)
 }
 
-func (ch *CategoryHandler) handleGetPostsByCategory(w http.ResponseWriter, r *http.Request, categoryID string) {
-	posts, err := ch.getPostsByCategory(categoryID)
-	if err != nil {
-		log.Printf("Error fetching posts for category %s: %v", categoryID, err)
-		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrInternalServer)
-		return
-	}
+// func (ch *CategoryHandler) handleGetPostsByCategory(w http.ResponseWriter, r *http.Request, categoryID string) {
+// 	posts, err := ch.getPostsByCategory(categoryID)
+// 	if err != nil {
+// 		log.Printf("Error fetching posts for category %s: %v", categoryID, err)
+// 		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrInternalServer)
+// 		return
+// 	}
 
-	isLoggedIn := ch.checkAuthStatus(r)
+// 	isLoggedIn := ch.checkAuthStatus(r)
 
-	data := utils.PageData{
-		IsLoggedIn: isLoggedIn,
-		Posts:      posts,
-	}
+// 	data := utils.PageData{
+// 		IsLoggedIn: isLoggedIn,
+// 		Posts:      posts,
+// 	}
 
-	tmpl, err := template.ParseFiles("templates/category_posts.html")
-	if err != nil {
-		log.Printf("Error parsing category posts template: %v", err)
-		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateExec)
-		return
-	}
+// 	tmpl, err := template.ParseFiles("templates/category_posts.html")
+// 	if err != nil {
+// 		log.Printf("Error parsing category posts template: %v", err)
+// 		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateExec)
+// 		return
+// 	}
 
-	if err := tmpl.Execute(w, data); err != nil {
-		log.Printf("Error executing category posts template: %v", err)
-		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateExec)
-	}
-}
+// 	if err := tmpl.Execute(w, data); err != nil {
+// 		log.Printf("Error executing category posts template: %v", err)
+// 		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateExec)
+// 	}
+// }
 
 func (ch *CategoryHandler) handleGetPostsByCategoryName(w http.ResponseWriter, r *http.Request, categoryName string) {
 	posts, err := ch.getPostsByCategoryName(categoryName)
@@ -168,38 +168,38 @@ func (ch *CategoryHandler) handleGetPostsByCategoryName(w http.ResponseWriter, r
 	}
 }
 
-func (ch *CategoryHandler) getPostsByCategory(categoryID string) ([]utils.Post, error) {
-	rows, err := utils.GlobalDB.Query(`
-        SELECT p.id, p.title, p.content, p.imagepath, u.username, u.profile_pic,
-               (SELECT COUNT(*) FROM reaction WHERE post_id = p.id AND like = 1) AS Likes,
-               (SELECT COUNT(*) FROM reaction WHERE post_id = p.id AND like = 0) AS Dislikes
-        FROM posts p
-        JOIN post_categories pc ON p.id = pc.post_id
-        JOIN users u ON p.user_id = u.id
-        WHERE pc.category_id = ?
-    `, categoryID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
+// func (ch *CategoryHandler) getPostsByCategory(categoryID string) ([]utils.Post, error) {
+// 	rows, err := utils.GlobalDB.Query(`
+//         SELECT p.id, p.title, p.content, p.imagepath, u.username, u.profile_pic,
+//                (SELECT COUNT(*) FROM reaction WHERE post_id = p.id AND like = 1) AS Likes,
+//                (SELECT COUNT(*) FROM reaction WHERE post_id = p.id AND like = 0) AS Dislikes
+//         FROM posts p
+//         JOIN post_categories pc ON p.id = pc.post_id
+//         JOIN users u ON p.user_id = u.id
+//         WHERE pc.category_id = ?
+//     `, categoryID)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer rows.Close()
 
-	postMap := make(map[int]utils.Post)
-	for rows.Next() {
-		var post utils.Post
-		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.ImagePath, &post.Username, &post.ProfilePic, &post.Likes, &post.Dislikes); err != nil {
-			log.Printf("Error scanning post: %v", err)
-			continue
-		}
-		postMap[post.ID] = post
-	}
+// 	postMap := make(map[int]utils.Post)
+// 	for rows.Next() {
+// 		var post utils.Post
+// 		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.ImagePath, &post.Username, &post.ProfilePic, &post.Likes, &post.Dislikes); err != nil {
+// 			log.Printf("Error scanning post: %v", err)
+// 			continue
+// 		}
+// 		postMap[post.ID] = post
+// 	}
 
-	var posts []utils.Post
-	for _, post := range postMap {
-		posts = append(posts, post)
-	}
+// 	var posts []utils.Post
+// 	for _, post := range postMap {
+// 		posts = append(posts, post)
+// 	}
 
-	return posts, rows.Err()
-}
+// 	return posts, rows.Err()
+// }
 
 func (ch *CategoryHandler) getPostsByCategoryName(categoryName string) ([]utils.Post, error) {
 	rows, err := utils.GlobalDB.Query(`
