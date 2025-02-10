@@ -6,6 +6,9 @@ import (
 	"net/http"
 
 	"forum/controllers"
+	categories "forum/controllers/categories"
+	postcontollers "forum/controllers/post_contollers"
+	postfilters "forum/controllers/post_filters"
 	"forum/handlers"
 	"forum/utils"
 )
@@ -25,13 +28,13 @@ func main() {
 	// Setup routes
 	http.HandleFunc("/signup", handlers.SignUpHandler)
 	http.HandleFunc("/signin", handlers.SignInHandler)
-	http.HandleFunc("/created", controllers.CreatedPosts)
-	http.HandleFunc("/liked", controllers.LikedPosts)
+	http.HandleFunc("/created", postfilters.CreatedPosts)
+	http.HandleFunc("/liked", postfilters.LikedPosts)
 
 	http.HandleFunc("/signout", handlers.SignOutHandler(db))
 
 	// Initialize post handler
-	postHandler := controllers.NewPostHandler()
+	postHandler := postcontollers.NewPostHandler()
 
 	// http.Handle("/post", postHandler)
 	http.Handle("/", postHandler) // Handle root for posts
@@ -41,7 +44,7 @@ func main() {
 	http.Handle("/profile/", profileHandler)
 
 	// Initialize category handler
-	categoryHandler := controllers.NewCategoryHandler()
+	categoryHandler := categories.NewCategoryHandler()
 	http.Handle("/categories", categoryHandler)
 	http.Handle("/category", categoryHandler)
 

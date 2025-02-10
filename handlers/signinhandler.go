@@ -61,11 +61,12 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			if err == sql.ErrNoRows {
 				data.GeneralError = "Invalid username or password"
+				data.Username = username
+				tmpl.Execute(w, data)
 			} else {
-				data.GeneralError = "An error occurred. Please try again later."
+				utils.RenderErrorPage(w, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+				log.Printf("Error querying database: %v", err)
 			}
-			utils.RenderErrorPage(w, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
-			log.Printf("Error querying database: %v", err)
 			return
 		}
 
