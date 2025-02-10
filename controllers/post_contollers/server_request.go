@@ -43,6 +43,13 @@ func (ph *PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		} else {
 			utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
 		}
+	case "/edit-post":
+		if r.Method == http.MethodPost {
+			ph.authMiddleware(ph.handleEditPost).ServeHTTP(w, r)
+		} else {
+			utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
+		}
+		
 	default:
 		utils.RenderErrorPage(w, http.StatusNotFound, utils.ErrPageNotFound)
 	}

@@ -37,6 +37,40 @@ body {
     transition: background-color 0.3s, color 0.3s;
 }
 
+
+/* Add to styles.css */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: var(--bg-primary);
+    margin: 15% auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 600px;
+}
+
+.close {
+    float: right;
+    font-size: 28px;
+    cursor: pointer;
+}
+
+#edit-content {
+    width: 100%;
+    min-height: 150px;
+    margin: 10px 0;
+    padding: 10px;
+}
 /* Navbar */
 .navbar {
     background-color: var(--bg-primary);
