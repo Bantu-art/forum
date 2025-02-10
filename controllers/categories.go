@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"time"
 
 	"forum/utils"
 )
@@ -215,7 +216,7 @@ func (ch *CategoryHandler) handleGetPostsByCategoryName(w http.ResponseWriter, r
 
 func (ch *CategoryHandler) getPostsByCategoryName(categoryName string) ([]utils.Post, error) {
 	rows, err := utils.GlobalDB.Query(`
-        SELECT p.id, p.title, p.content, p.imagepath, u.username, u.profile_pic,
+        SELECT p.id, p.title, p.content, p.imagepath, p.post_at, u.username, u.profile_pic,
                (SELECT COUNT(*) FROM reaction WHERE post_id = p.id AND like = 1) AS Likes,
                (SELECT COUNT(*) FROM reaction WHERE post_id = p.id AND like = 0) AS Dislikes
         FROM posts p
@@ -232,10 +233,12 @@ func (ch *CategoryHandler) getPostsByCategoryName(categoryName string) ([]utils.
 	postMap := make(map[int]utils.Post)
 	for rows.Next() {
 		var post utils.Post
-		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.ImagePath, &post.Username, &post.ProfilePic, &post.Likes, &post.Dislikes); err != nil {
+		var postTime time.Time
+		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.ImagePath, &postTime, &post.Username, &post.ProfilePic, &post.Likes, &post.Dislikes); err != nil {
 			log.Printf("Error scanning post: %v", err)
 			continue
 		}
+		post.PostTime = FormatTimeAgo(postTime.Local())
 		postMap[post.ID] = post
 	}
 
