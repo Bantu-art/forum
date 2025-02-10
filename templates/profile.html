@@ -10,7 +10,9 @@
 <body>
     <nav class="navbar">
         <div class="nav-container">
-            <h1 class="logo">Forum</h1>
+            <a href="/" class="logo-link">
+                <h1 class="logo">Forum</h1>
+            </a>
             <button class="hamburger-btn">
                 <i class="fas fa-bars"></i>
             </button>
@@ -18,25 +20,16 @@
                 <button id="create-post-btn" class="btn btn-primary" onclick="window.location.href='/create'">
                     <i class="fas fa-plus"></i> Create Post
                 </button>
+                <button id="create-post-btn" class="btn btn-primary" onclick="window.location.href='/create'">
+                    <i class="fas fa-user"></i> {{.Username}}
+                </button>
+                <button class="btn btn-primary" onclick="window.location.href='/signout'">
+                    <i class="fas fa-sign-out-alt"></i> Sign Out
+                </button>
                 <button id="theme-toggle" class="theme-toggle">
                     <i class="fas fa-moon"></i>
                 </button>
-                {{if not .IsLoggedIn}}
-                    <button class="btn btn-outline" onclick="window.location.href='/signin'">
-                        <i class="fas fa-sign-in-alt"></i> Login
-                    </button>
-                    <button class="btn btn-primary" onclick="window.location.href='/signup'">
-                        <i class="fas fa-user-plus"></i> Sign Up
-                    </button>
-                {{else}}
-                    <button class="btn btn-outline" onclick="window.location.href='/profile/{{.CurrentUserID}}'">
-                        <i class="fas fa-user"></i> Profile
-                    </button>
-                    <button class="btn btn-primary" onclick="window.location.href='/signout'">
-                        <i class="fas fa-sign-out-alt"></i> Sign Out
-                    </button>
-                {{end}}
-                
+    
                 <!-- Mobile Categories Section -->
                 <div class="mobile-menu-section">
                     <button class="menu-toggle-btn">
@@ -54,7 +47,7 @@
                         </ul>
                     </div>
                 </div>
-                
+    
                 <!-- Mobile Filters Section -->
                 <div class="mobile-menu-section">
                     <button class="menu-toggle-btn">
@@ -107,21 +100,24 @@
     </main>
 
     <script>
-        // Auto-submit form when file is selected
-        document.getElementById('profile_pic').addEventListener('change', function() {
-        const form = document.getElementById('profile-pic-form');
-        const file = this.files[0];
-        
-        if (file && isValidImageType(file.type)) {
-            form.submit();
-        } else {
-            alert('Please select a valid image file (JPEG, PNG, or GIF)');
-        }
+      document.addEventListener('DOMContentLoaded', function () {
+    const hamburgerBtn = document.querySelector('.hamburger-btn');
+    const mobileMenuOverlay = document.querySelector('.mobile-menu-overlay');
+    const navRight = document.querySelector('.nav-right');
+
+    // Toggle the menu visibility
+    hamburgerBtn.addEventListener('click', function () {
+        navRight.classList.toggle('show-menu');
+        mobileMenuOverlay.classList.toggle('show-overlay');
     });
 
-    function isValidImageType(type) {
-        return ['image/jpeg', 'image/png', 'image/gif'].includes(type);
-    }
+    // Close the menu when clicking outside of it
+    mobileMenuOverlay.addEventListener('click', function () {
+        navRight.classList.remove('show-menu');
+        mobileMenuOverlay.classList.remove('show-overlay');
+    });
+});
+
     </script>
 </body>
 </html>
