@@ -17,7 +17,7 @@ var ValidImageTypes = map[string]bool{
 func ValidateImage(file multipart.File, header *multipart.FileHeader) error {
 	// Check file size
 	if header.Size > MaxFileSize {
-		return errors.New(ErrFileTooLarge)
+		return errors.New("file too large")
 	}
 
 	// Check file type
@@ -26,10 +26,10 @@ func ValidateImage(file multipart.File, header *multipart.FileHeader) error {
 	case ".jpg", ".jpeg", ".png", ".gif":
 		contentType := header.Header.Get("Content-Type")
 		if !ValidImageTypes[contentType] {
-			return errors.New(ErrInvalidFileType)
+			return errors.New("invalid file type")
 		}
 	default:
-		return errors.New(ErrInvalidFileType)
+		return errors.New("invalid file type")
 	}
 
 	return nil
