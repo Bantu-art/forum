@@ -183,13 +183,18 @@ func (ch *CategoryHandler) getPostsByCategory(categoryID string) ([]utils.Post, 
 	}
 	defer rows.Close()
 
-	var posts []utils.Post
+	postMap := make(map[int]utils.Post)
 	for rows.Next() {
 		var post utils.Post
 		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.ImagePath, &post.Username, &post.ProfilePic, &post.Likes, &post.Dislikes); err != nil {
 			log.Printf("Error scanning post: %v", err)
 			continue
 		}
+		postMap[post.ID] = post
+	}
+
+	var posts []utils.Post
+	for _, post := range postMap {
 		posts = append(posts, post)
 	}
 
@@ -212,13 +217,18 @@ func (ch *CategoryHandler) getPostsByCategoryName(categoryName string) ([]utils.
 	}
 	defer rows.Close()
 
-	var posts []utils.Post
+	postMap := make(map[int]utils.Post)
 	for rows.Next() {
 		var post utils.Post
 		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.ImagePath, &post.Username, &post.ProfilePic, &post.Likes, &post.Dislikes); err != nil {
 			log.Printf("Error scanning post: %v", err)
 			continue
 		}
+		postMap[post.ID] = post
+	}
+
+	var posts []utils.Post
+	for _, post := range postMap {
 		posts = append(posts, post)
 	}
 
