@@ -1,13 +1,12 @@
 function handleReaction(event) {
     event.preventDefault();
 
-    event.stopPropagation(); // Prevent post link click when clicking like/dislike
+    event.stopPropagation();
 
     const button = event.currentTarget;
     const postID = button.getAttribute("data-post-id");
     const action = button.getAttribute("data-action");
 
-    // Check if user is logged in by looking for session cookie
     const hasSession = document.cookie.includes('session_token=');
     if (!hasSession) {
         window.location.href = '/signin';
@@ -53,15 +52,14 @@ function handleReaction(event) {
     });
 }
 
-// Handler for comment reactions (modified to mirror the post reaction handler)
+// Handler for comment reactions 
 function handleCommentReaction(event) {
-    event.stopPropagation(); // Prevent any unwanted propagation
+    event.stopPropagation(); 
 
     const button = event.currentTarget;
     const commentID = button.getAttribute("data-comment-id");
     const action = button.getAttribute("data-action");
 
-    // Check if user is logged in by looking for session cookie
     const hasSession = document.cookie.includes('session_token=');
     if (!hasSession) {
         window.location.href = '/signin';
@@ -79,7 +77,7 @@ function handleCommentReaction(event) {
             comment_id: parseInt(commentID),
             like: like,
         }),
-        credentials: 'include' // Ensure cookies are sent
+        credentials: 'include'
     })
     .then(response => {
         if (response.status === 401) {
@@ -92,7 +90,6 @@ function handleCommentReaction(event) {
         if (data.error) {
             throw new Error(data.error);
         }
-        // Update the comment's like and dislike counts on the page
         const likesElement = document.getElementById(`comment-likes-${commentID}`);
         const dislikesElement = document.getElementById(`comment-dislikes-${commentID}`);
         console.log(likesElement)
@@ -108,16 +105,13 @@ function handleCommentReaction(event) {
     });
 }
 
-// Attach event listeners for post reaction buttons
 document.querySelectorAll(".like-btn, .dislike-btn").forEach(button => {
     button.addEventListener("click", handleReaction);
 });
 
-// Attach event listeners for comment reaction buttons
 document.querySelectorAll(".comment-like-btn, .comment-dislike-btn").forEach(button => {
     button.addEventListener("click", handleCommentReaction);
 });
-// Add these functions to your like.js file
 
 function toggleEditComment(commentId) {
     const contentDiv = document.getElementById(`comment-content-${commentId}`);
@@ -160,27 +154,72 @@ function handleEditComment(event, commentId, postId) {
 }
 
 function deleteComment(commentId, postId) {
-    if (!confirm('Are you sure you want to delete this comment?')) {
-        return;
-    }
+    const commentElement = document.getElementById(`comment-${commentId}`);
+    if (!commentElement) return;
 
-    fetch('/comment/delete', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: `comment_id=${commentId}&post_id=${postId}`,
-        credentials: 'include'
-    })
-    .then(response => {
-        if (response.ok) {
-            window.location.reload();
-        } else {
-            throw new Error('Failed to delete comment');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert(error.message);
-    });
+    // Create confirmation UI
+    const confirmDiv = document.createElement('div');
+    confirmDiv.className = 'alert alert-warning';
+    confirmDiv.style.marginTop = '10px';
+    
+    const confirmText = document.createElement('span');
+    confirmText.textContent = 'Are you sure you want to delete this comment? ';
+    confirmDiv.appendChild(confirmText);
+    
+    const confirmBtn = document.createElement('button');
+    confirmBtn.className = 'btn btn-sm btn-danger';
+    confirmBtn.textContent = 'Yes';
+    confirmBtn.style.marginRight = '10px';
+    
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn btn-sm';
+    cancelBtn.textContent = 'No';
+    
+    confirmDiv.appendChild(confirmBtn);
+    confirmDiv.appendChild(cancelBtn);
+    
+    commentElement.appendChild(confirmDiv);
+    
+    cancelBtn.onclick = () => {
+        confirmDiv.remove();
+    };
+    confirmBtn.onclick = () => {
+        confirmDiv.remove();
+        fetch('/comment/delete', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `comment_id=${commentId}&post_id=${postId}`,
+            credentials: 'include'
+        })
+        .then(response => {
+            if (response.ok) {
+                const messageElement = document.createElement('div');
+                messageElement.className = 'alert alert-success';
+                messageElement.textContent = 'Comment deleted successfully';
+                
+                commentElement.parentNode.insertBefore(messageElement, commentElement.nextSibling);
+                commentElement.remove();
+                
+                setTimeout(() => {
+                    messageElement.remove();
+                }, 3000);
+            } else {
+                throw new Error('Failed to delete comment');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            const messageElement = document.createElement('div');
+            messageElement.className = 'alert alert-error';
+            messageElement.textContent = error.message;
+            
+            commentElement.parentNode.insertBefore(messageElement, commentElement.nextSibling);
+            
+            setTimeout(() => {
+                messageElement.remove();
+            }, 500);
+        });
+    };
 }
