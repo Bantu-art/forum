@@ -149,10 +149,22 @@ func (ch *CategoryHandler) handleGetPostsByCategoryName(w http.ResponseWriter, r
 	}
 
 	isLoggedIn := ch.checkAuthStatus(r)
+	var currentUserID string
 
-	data := utils.PageData{
-		IsLoggedIn: isLoggedIn,
-		Posts:      posts,
+	if cookie, err := r.Cookie("session_token"); err == nil {
+		if userID, err := utils.ValidateSession(utils.GlobalDB, cookie.Value); err == nil {
+			currentUserID = userID
+		}
+	}
+
+	data := struct {
+		IsLoggedIn    bool
+		Posts         []utils.Post
+		CurrentUserID string
+	}{
+		IsLoggedIn:    isLoggedIn,
+		Posts:         posts,
+		CurrentUserID: currentUserID,
 	}
 
 	tmpl, err := template.ParseFiles("templates/category_posts.html")
