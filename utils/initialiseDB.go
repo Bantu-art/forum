@@ -280,7 +280,6 @@ func InsertDefaultCategories() error {
 		"Programming",
 		"Business",
 		"Lifestyle",
-		"Personal Development",
 		"Football",
 		"Politics",
 		"General News",
