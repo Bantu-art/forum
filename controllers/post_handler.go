@@ -233,7 +233,6 @@ func (ph *PostHandler) getAllPosts() ([]utils.Post, error) {
 
 		post.PostTime = FormatTimeAgo(postTime.Local())
 
-		
 		postMap[post.ID] = post
 	}
 
@@ -334,6 +333,7 @@ func getCategoryIDByName(name string) (int, error) {
 	}
 	return id, nil
 }
+
 func FormatTimeAgo(t time.Time) string {
 	now := time.Now()
 	diff := now.Sub(t)
