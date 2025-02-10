@@ -117,3 +117,70 @@ document.querySelectorAll(".like-btn, .dislike-btn").forEach(button => {
 document.querySelectorAll(".comment-like-btn, .comment-dislike-btn").forEach(button => {
     button.addEventListener("click", handleCommentReaction);
 });
+// Add these functions to your like.js file
+
+function toggleEditComment(commentId) {
+    const contentDiv = document.getElementById(`comment-content-${commentId}`);
+    const editForm = document.getElementById(`comment-edit-${commentId}`);
+    
+    if (contentDiv.style.display !== 'none') {
+        contentDiv.style.display = 'none';
+        editForm.style.display = 'block';
+    } else {
+        contentDiv.style.display = 'block';
+        editForm.style.display = 'none';
+    }
+}
+
+function handleEditComment(event, commentId, postId) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const content = form.querySelector('textarea').value;
+
+    fetch('/comment/edit', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `comment_id=${commentId}&post_id=${postId}&content=${encodeURIComponent(content)}`,
+        credentials: 'include'
+    })
+    .then(response => {
+        if (response.ok) {
+            window.location.reload();
+        } else {
+            throw new Error('Failed to edit comment');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert(error.message);
+    });
+}
+
+function deleteComment(commentId, postId) {
+    if (!confirm('Are you sure you want to delete this comment?')) {
+        return;
+    }
+
+    fetch('/comment/delete', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `comment_id=${commentId}&post_id=${postId}`,
+        credentials: 'include'
+    })
+    .then(response => {
+        if (response.ok) {
+            window.location.reload();
+        } else {
+            throw new Error('Failed to delete comment');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert(error.message);
+    });
+}
