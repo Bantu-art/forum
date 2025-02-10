@@ -14,7 +14,6 @@ func InitialiseDB() (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	GlobalDB = db
 
 	// Create Users table
@@ -43,7 +42,7 @@ func InitialiseDB() (*sql.DB, error) {
         content TEXT NOT NULL,
         imagepath TEXT,
         post_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        likes INTEGER DEFAULT 0,
+       likes INTEGER DEFAULT 0,
         dislikes INTEGER DEFAULT 0,
         comments INTEGER DEFAULT 0,
 		userreaction INTEGER,
@@ -148,7 +147,7 @@ END;
         likes INTEGER DEFAULT 0,
         dislikes INTEGER DEFAULT 0,
         FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
-        FOREIGN KEY (user_id) REFERENCES users(id)
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
     CREATE INDEX IF NOT EXISTS idx_comments_post_id ON comments(post_id);
     CREATE INDEX IF NOT EXISTS idx_comments_user_id ON comments(user_id);
@@ -249,7 +248,7 @@ END;
         category_id INTEGER,
         PRIMARY KEY (post_id, category_id),
         FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
-        FOREIGN KEY (category_id) REFERENCES categories(id)
+        FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
     );
     CREATE INDEX IF NOT EXISTS idx_post_categories_category_id ON post_categories(category_id);
     `)

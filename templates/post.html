@@ -78,6 +78,11 @@
                             data-post-id="{{.Post.ID}}">
                         <i class="fas fa-edit"></i> Edit
                     </button>
+                    <button class="action-btn delete-btn" 
+                            onclick="deletePost('{{.Post.ID}}')"
+                            data-post-id="{{.Post.ID}}">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
                     {{end}}
                 </div>
             </div>
@@ -157,6 +162,7 @@
     </div>
 
     <!-- Add edit.js script -->
+    <script src="../static/delete.js"></script>
     <script src="../static/edit.js"></script>
     <script src="../static/like.js" type="text/javascript"></script>
 </body>

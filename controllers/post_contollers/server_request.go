@@ -49,6 +49,12 @@ func (ph *PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		} else {
 			utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
 		}
+	case "/delete-post":
+		if r.Method == http.MethodPost {
+			ph.authMiddleware(ph.handleDeletePost).ServeHTTP(w, r)
+		} else {
+			utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
+		}
 		
 	default:
 		utils.RenderErrorPage(w, http.StatusNotFound, utils.ErrPageNotFound)

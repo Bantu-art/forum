@@ -102,6 +102,11 @@
                     data-post-id="{{.ID}}">
                 <i class="fas fa-edit"></i> Edit
             </button>
+<button class="action-btn delete-btn" 
+        onclick="event.stopPropagation(); deletePost('{{.ID}}')"
+        data-post-id="{{.ID}}">
+    <i class="fas fa-trash"></i> Delete
+</button>
 {{end}}
 
                     <button class="action-btn like-btn" onclick="event.stopPropagation();" data-post-id="{{.ID}}" data-action="like">
@@ -136,6 +141,8 @@
 
 
     <script src="../static/like.js"></script>
+    <script src="../static/delete.js"></script>
+
     <script src="../static/edit.js"></script>
 </body>
 
