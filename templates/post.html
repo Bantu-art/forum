@@ -110,19 +110,26 @@
 
             <!-- Reaction Buttons -->
             <div class="post-footer">
+                <div class="action-container">
                 <button class="action-btn like-btn" data-post-id="{{.Post.ID}}" data-action="like">
                     <i class="fas fa-heart"></i>
                     <span class="count" id="likes-{{.Post.ID}}">{{.Post.Likes}}</span>
                 </button>
+                </div>
+                <div class="action-container">
+                    <button class="action-btn comment-btn" data-post-id="{{.Post.ID}}">
+                        <i class="fas fa-comment"></i>
+                        <span class="count" id="comments-{{.Post.ID}}">{{.Post.Comments}}</span>
+                    </button>
+                    </div>
+
+                <div class="action-container">
                 <button class="action-btn dislike-btn" data-post-id="{{.Post.ID}}" data-action="dislike">
                     <i class="fas fa-thumbs-down"></i>
                     <span class="count" id="dislikes-{{.Post.ID}}">{{.Post.Dislikes}}</span>
                 </button>
-                <!-- New Comment Button -->
-                <button class="action-btn comment-btn" data-post-id="{{.Post.ID}}">
-                    <i class="fas fa-comment"></i>
-                    <span class="count" id="comments-{{.Post.ID}}">{{.Post.Comments}}</span>
-                </button>
+                </div>
+              
             </div>
 
             <div class="comments-section">
