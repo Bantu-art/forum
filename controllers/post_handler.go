@@ -14,7 +14,6 @@ import (
 	"forum/utils"
 )
 
-
 type PostHandler struct {
 	imageHandler *ImageHandler
 }
@@ -56,13 +55,13 @@ func (ph *PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		case http.MethodPost:
 			ph.authMiddleware(ph.handleCreatePost).ServeHTTP(w, r)
 		default:
-            utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
+			utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
 		}
 	case "/react":
 		if r.Method == http.MethodPost {
 			ph.authMiddleware(ph.handleReactions).ServeHTTP(w, r)
 		} else {
-            utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
+			utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
 		}
 	case "/":
 		if r.Method == http.MethodGet {
@@ -76,13 +75,25 @@ func (ph *PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			ph.authMiddleware(ph.handleComment).ServeHTTP(w, r)
 		} else {
-            utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
+			utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
 		}
 	case "/commentreact":
 		if r.Method == http.MethodPost {
 			ph.authMiddleware(ph.handleCommentReactions).ServeHTTP(w, r)
 		} else {
-            utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
+			utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
+		}
+	case "/comment/edit":
+		if r.Method == http.MethodPost {
+			ph.authMiddleware(ph.handleEditComment).ServeHTTP(w, r)
+		} else {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	case "/comment/delete":
+		if r.Method == http.MethodPost {
+			ph.authMiddleware(ph.handleDeleteComment).ServeHTTP(w, r)
+		} else {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	default:
 		utils.RenderErrorPage(w, http.StatusNotFound, utils.ErrPageNotFound)
@@ -93,23 +104,21 @@ func (ph *PostHandler) displayCreateForm(w http.ResponseWriter, r *http.Request)
 	categories, err := ph.getAllCategories()
 	if err != nil {
 		log.Printf("Error fetching categories: %v", err)
-        utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrCategoryLoad)
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrCategoryLoad)
 		return
 	}
 
 	tmpl, err := template.ParseFiles("templates/createpost.html")
 	if err != nil {
 		log.Printf("Error parsing create form template: %v", err)
-        utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateLoad)
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateLoad)
 		return
 	}
 
-
 	data := struct {
-		Categories []utils.Category
+		Categories    []utils.Category
 		CurrentUserID string
-		IsLoggedIn bool
-
+		IsLoggedIn    bool
 	}{
 		Categories: categories,
 		IsLoggedIn: ph.checkAuthStatus(r),
@@ -121,10 +130,10 @@ func (ph *PostHandler) displayCreateForm(w http.ResponseWriter, r *http.Request)
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {
-    log.Printf("Error executing create form template: %v", err)
-    utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateExec)
-    return
-}
+		log.Printf("Error executing create form template: %v", err)
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateExec)
+		return
+	}
 }
 
 func (ph *PostHandler) getAllCategories() ([]utils.Category, error) {
@@ -169,7 +178,7 @@ func (ph *PostHandler) handleGetPosts(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.ParseFiles("templates/index.html")
 	if err != nil {
 		log.Printf("Error parsing template: %v", err)
-        utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateLoad)
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateLoad)
 		return
 	}
 
@@ -247,13 +256,13 @@ func (ph *PostHandler) handleCreatePost(w http.ResponseWriter, r *http.Request) 
 	// Get userID from context
 	userID := r.Context().Value("userID").(string)
 	if userID == "" {
-        utils.RenderErrorPage(w, http.StatusUnauthorized, utils.ErrUnauthorized)
+		utils.RenderErrorPage(w, http.StatusUnauthorized, utils.ErrUnauthorized)
 		return
 	}
 
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		log.Printf("Error parsing form: %v", err)
-        utils.RenderErrorPage(w, http.StatusBadRequest, utils.ErrInvalidForm)
+		utils.RenderErrorPage(w, http.StatusBadRequest, utils.ErrInvalidForm)
 		return
 	}
 
@@ -266,21 +275,21 @@ func (ph *PostHandler) handleCreatePost(w http.ResponseWriter, r *http.Request) 
 
 	if title == "" || content == "" || len(categories) == 0 {
 		log.Printf("Title, content, and category are required")
-        utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrInvalidForm)
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrInvalidForm)
 		return
 	}
 	// Handle image upload
 	var imagePath string
 	file, header, err := r.FormFile("image")
-if err == nil {
-    defer file.Close()
-    imagePath, err = ph.imageHandler.ProcessImage(file, header)
-    if err != nil {
-        log.Printf("Error processing image: %v", err)
-        utils.RenderErrorPage(w, http.StatusBadRequest, err.Error())
-        return
-    }
-}
+	if err == nil {
+		defer file.Close()
+		imagePath, err = ph.imageHandler.ProcessImage(file, header)
+		if err != nil {
+			log.Printf("Error processing image: %v", err)
+			utils.RenderErrorPage(w, http.StatusBadRequest, err.Error())
+			return
+		}
+	}
 
 	// Prepare the insert statement with image support
 	stmt, err := utils.GlobalDB.Prepare(`
@@ -394,13 +403,13 @@ func (ph *PostHandler) handleSinglePost(w http.ResponseWriter, r *http.Request) 
 	}
 
 	data := struct {
-		Post     *utils.Post
-		Comments []utils.Comment
+		Post          *utils.Post
+		Comments      []utils.Comment
 		CurrentUserID string
-		IsLoggedIn bool
+		IsLoggedIn    bool
 	}{
-		Post:     post,
-		Comments: comments,
+		Post:       post,
+		Comments:   comments,
 		IsLoggedIn: ph.checkAuthStatus(r),
 	}
 	if cookie, err := r.Cookie("session_token"); err == nil {
@@ -408,7 +417,6 @@ func (ph *PostHandler) handleSinglePost(w http.ResponseWriter, r *http.Request) 
 			data.CurrentUserID = userID
 		}
 	}
-
 
 	if err := tmpl.Execute(w, data); err != nil {
 		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateExec)
@@ -453,7 +461,7 @@ func (ph *PostHandler) getPostByID(id int64) (*utils.Post, []utils.Comment, erro
 	post.PostTime = FormatTimeAgo(postTime.Local())
 	// Get comments
 	rows, err := utils.GlobalDB.Query(`
-	  SELECT c.id, c.content, c.comment_at, u.username, u.profile_pic 
+	  SELECT c.id, c.user_id,c.content, c.comment_at,c.likes,c.dislikes, u.username, u.profile_pic 
 	  FROM comments c
 	  JOIN users u ON c.user_id = u.id
 	  WHERE c.post_id = ?
@@ -467,7 +475,16 @@ func (ph *PostHandler) getPostByID(id int64) (*utils.Post, []utils.Comment, erro
 	for rows.Next() {
 		var c utils.Comment
 		var t time.Time
-		err := rows.Scan(&c.ID, &c.Content, &t, &c.Username, &c.ProfilePic)
+		err := rows.Scan(
+			&c.ID,
+			&c.UserID,
+			&c.Content,
+			&t,
+			&c.Likes,
+			&c.Dislikes,
+			&c.Username,
+			&c.ProfilePic,
+		)
 		if err != nil {
 			continue
 		}
@@ -707,4 +724,105 @@ func (ph *PostHandler) handleCommentReactions(w http.ResponseWriter, r *http.Req
 		"likes":    likes,
 		"dislikes": dislikes,
 	})
+}
+
+func (ph *PostHandler) handleEditComment(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("userID").(string)
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+
+	commentID, err := strconv.Atoi(r.FormValue("comment_id"))
+	if err != nil {
+		http.Error(w, "Invalid comment ID", http.StatusBadRequest)
+		return
+	}
+
+	postID, err := strconv.Atoi(r.FormValue("post_id"))
+	if err != nil {
+		http.Error(w, "Invalid post ID", http.StatusBadRequest)
+		return
+	}
+
+	content := r.FormValue("content")
+	if content == "" {
+		http.Error(w, "Comment cannot be empty", http.StatusBadRequest)
+		return
+	}
+
+	// Verify comment ownership
+	var commentUserID string
+	err = utils.GlobalDB.QueryRow("SELECT user_id FROM comments WHERE id = ?", commentID).Scan(&commentUserID)
+	if err != nil {
+		http.Error(w, "Comment not found", http.StatusNotFound)
+		return
+	}
+
+	if commentUserID != userID {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Update comment
+	_, err = utils.GlobalDB.Exec("UPDATE comments SET content = ? WHERE id = ?", content, commentID)
+	if err != nil {
+		log.Printf("Error updating comment: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/?id=%d", postID), http.StatusSeeOther)
+}
+
+// Add handler for deleting comments
+func (ph *PostHandler) handleDeleteComment(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("userID").(string)
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+
+	commentID, err := strconv.Atoi(r.FormValue("comment_id"))
+	if err != nil {
+		http.Error(w, "Invalid comment ID", http.StatusBadRequest)
+		return
+	}
+
+	postID, err := strconv.Atoi(r.FormValue("post_id"))
+	if err != nil {
+		http.Error(w, "Invalid post ID", http.StatusBadRequest)
+		return
+	}
+
+	// Verify comment ownership
+	var commentUserID string
+	err = utils.GlobalDB.QueryRow("SELECT user_id FROM comments WHERE id = ?", commentID).Scan(&commentUserID)
+	if err != nil {
+		http.Error(w, "Comment not found", http.StatusNotFound)
+		return
+	}
+
+	if commentUserID != userID {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Delete comment
+	_, err = utils.GlobalDB.Exec("DELETE FROM comments WHERE id = ?", commentID)
+	if err != nil {
+		log.Printf("Error deleting comment: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	// Update post comment count
+	_, err = utils.GlobalDB.Exec("UPDATE posts SET comments = comments - 1 WHERE id = ?", postID)
+	if err != nil {
+		log.Printf("Error updating comment count: %v", err)
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/?id=%d", postID), http.StatusSeeOther)
 }

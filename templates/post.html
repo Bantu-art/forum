@@ -97,8 +97,9 @@
                     <button type="submit" class="btn btn-primary">Post Comment</button>
                 </form>
 
+                <!-- Update the comment section in post.html -->
                 {{range .Comments}}
-                <div class="comment">
+                <div class="comment" id="comment-{{.ID}}">
                     <div class="comment-header">
                         {{if .ProfilePic.Valid}}
                         <img src="{{.ProfilePic.String}}" class="comment-avatar">
@@ -111,9 +112,29 @@
                             <strong>{{.Username}}</strong>
                             <span class="comment-time">{{.CommentTime.Format "Jan 2, 2006 15:04"}}</span>
                         </div>
+                        {{if eq .UserID $.CurrentUserID}}
+                        <div class="comment-actions">
+                            <button class="btn btn-sm" onclick="toggleEditComment('{{.ID}}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteComment('{{.ID}}', '{{$.Post.ID}}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        {{end}}
                     </div>
-                    <div class="comment-content">
+                    <div class="comment-content" id="comment-content-{{.ID}}">
                         {{.Content}}
+                    </div>
+                    <div class="comment-edit-form" id="comment-edit-{{.ID}}" style="display: none;">
+                        <form onsubmit="handleEditComment(event, '{{.ID}}', '{{$.Post.ID}}')">
+                            <textarea class="comment-input" required>{{.Content}}</textarea>
+                            <div class="edit-actions">
+                                <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                                <button type="button" class="btn btn-outline btn-sm"
+                                    onclick="toggleEditComment('{{.ID}}')">Cancel</button>
+                            </div>
+                        </form>
                     </div>
                     <!-- Comment Reaction Buttons -->
                     <div class="comment-reaction-buttons">
