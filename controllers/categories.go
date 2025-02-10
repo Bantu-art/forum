@@ -22,32 +22,32 @@ func (ch *CategoryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		} else if r.Method == http.MethodPost {
 			ch.handleCreateCategory(w, r)
 		} else {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
 		}
 	case "/categories/posts":
 		if r.Method == http.MethodGet {
 			categoryID := r.URL.Query().Get("id")
 			if categoryID == "" {
-				http.Error(w, "Category ID is required", http.StatusBadRequest)
+				utils.RenderErrorPage(w, http.StatusBadRequest, utils.ErrInvalidForm)
 				return
 			}
 			ch.handleGetPostsByCategory(w, r, categoryID)
 		} else {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
 		}
 	case "/category":
 		if r.Method == http.MethodGet {
 			categoryName := r.URL.Query().Get("name")
 			if categoryName == "" {
-				http.Error(w, "Category name is required", http.StatusBadRequest)
+				utils.RenderErrorPage(w, http.StatusBadRequest, utils.ErrInvalidForm)
 				return
 			}
 			ch.handleGetPostsByCategoryName(w, r, categoryName)
 		} else {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
 		}
 	default:
-		http.NotFound(w, r)
+		utils.RenderErrorPage(w, http.StatusNotFound, utils.ErrNotFound)
 	}
 }
 
@@ -64,40 +64,40 @@ func (ch *CategoryHandler) handleGetCategories(w http.ResponseWriter, _ *http.Re
 	categories, err := ch.getAllCategories()
 	if err != nil {
 		log.Printf("Error fetching categories: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrInternalServer)
 		return
 	}
 
 	tmpl, err := template.ParseFiles("templates/categories.html")
 	if err != nil {
 		log.Printf("Error parsing categories template: %v", err)
-		http.Error(w, "Error loading template", http.StatusInternalServerError)
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateExec)
 		return
 	}
 
 	if err := tmpl.Execute(w, categories); err != nil {
 		log.Printf("Error executing categories template: %v", err)
-		http.Error(w, "Error loading template", http.StatusInternalServerError)
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateExec)
 	}
 }
 
 func (ch *CategoryHandler) handleCreateCategory(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		log.Printf("Error parsing form: %v", err)
-		http.Error(w, "Error processing form", http.StatusBadRequest)
+		utils.RenderErrorPage(w, http.StatusBadRequest, utils.ErrInvalidForm)
 		return
 	}
 
 	name := r.FormValue("name")
 	if name == "" {
-		http.Error(w, "Category name is required", http.StatusBadRequest)
+		utils.RenderErrorPage(w, http.StatusBadRequest, utils.ErrInvalidForm)
 		return
 	}
 
 	stmt, err := utils.GlobalDB.Prepare("INSERT INTO categories (name) VALUES (?)")
 	if err != nil {
 		log.Printf("Error preparing statement: %v", err)
-		http.Error(w, "Error creating category", http.StatusInternalServerError)
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrInternalServer)
 		return
 	}
 	defer stmt.Close()
@@ -105,7 +105,7 @@ func (ch *CategoryHandler) handleCreateCategory(w http.ResponseWriter, r *http.R
 	_, err = stmt.Exec(name)
 	if err != nil {
 		log.Printf("Error executing insert: %v", err)
-		http.Error(w, "Error creating category", http.StatusInternalServerError)
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrInternalServer)
 		return
 	}
 
@@ -116,7 +116,7 @@ func (ch *CategoryHandler) handleGetPostsByCategory(w http.ResponseWriter, r *ht
 	posts, err := ch.getPostsByCategory(categoryID)
 	if err != nil {
 		log.Printf("Error fetching posts for category %s: %v", categoryID, err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrInternalServer)
 		return
 	}
 
@@ -130,13 +130,13 @@ func (ch *CategoryHandler) handleGetPostsByCategory(w http.ResponseWriter, r *ht
 	tmpl, err := template.ParseFiles("templates/category_posts.html")
 	if err != nil {
 		log.Printf("Error parsing category posts template: %v", err)
-		http.Error(w, "Error loading template", http.StatusInternalServerError)
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateExec)
 		return
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {
 		log.Printf("Error executing category posts template: %v", err)
-		http.Error(w, "Error loading template", http.StatusInternalServerError)
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateExec)
 	}
 }
 
@@ -144,7 +144,7 @@ func (ch *CategoryHandler) handleGetPostsByCategoryName(w http.ResponseWriter, r
 	posts, err := ch.getPostsByCategoryName(categoryName)
 	if err != nil {
 		log.Printf("Error fetching posts for category %s: %v", categoryName, err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrInternalServer)
 		return
 	}
 
@@ -158,21 +158,21 @@ func (ch *CategoryHandler) handleGetPostsByCategoryName(w http.ResponseWriter, r
 	tmpl, err := template.ParseFiles("templates/category_posts.html")
 	if err != nil {
 		log.Printf("Error parsing category posts template: %v", err)
-		http.Error(w, "Error loading template", http.StatusInternalServerError)
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateExec)
 		return
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {
 		log.Printf("Error executing category posts template: %v", err)
-		http.Error(w, "Error loading template", http.StatusInternalServerError)
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateExec)
 	}
 }
 
 func (ch *CategoryHandler) getPostsByCategory(categoryID string) ([]utils.Post, error) {
 	rows, err := utils.GlobalDB.Query(`
         SELECT p.id, p.title, p.content, p.imagepath, u.username, u.profile_pic,
-               (SELECT COUNT(*) FROM reaction WHERE post_id = p.id AND likes = 1) AS Likes,
-               (SELECT COUNT(*) FROM reaction WHERE post_id = p.id AND dislikes = 0) AS Dislikes
+               (SELECT COUNT(*) FROM reaction WHERE post_id = p.id AND like = 1) AS Likes,
+               (SELECT COUNT(*) FROM reaction WHERE post_id = p.id AND like = 0) AS Dislikes
         FROM posts p
         JOIN post_categories pc ON p.id = pc.post_id
         JOIN users u ON p.user_id = u.id
@@ -199,12 +199,12 @@ func (ch *CategoryHandler) getPostsByCategory(categoryID string) ([]utils.Post, 
 func (ch *CategoryHandler) getPostsByCategoryName(categoryName string) ([]utils.Post, error) {
 	rows, err := utils.GlobalDB.Query(`
         SELECT p.id, p.title, p.content, p.imagepath, u.username, u.profile_pic,
-               (SELECT COUNT(*) FROM reaction WHERE post_id = p.id AND likes = 1) AS Likes,
-               (SELECT COUNT(*) FROM reaction WHERE post_id = p.id AND dislikes = 0) AS Dislikes
+               (SELECT COUNT(*) FROM reaction WHERE post_id = p.id AND like = 1) AS Likes,
+               (SELECT COUNT(*) FROM reaction WHERE post_id = p.id AND like = 0) AS Dislikes
         FROM posts p
         JOIN post_categories pc ON p.id = pc.post_id
         JOIN users u ON p.user_id = u.id
-        JOIN categories c ON pc.category_id = c.name
+        JOIN categories c ON pc.category_id = c.id
         WHERE c.name = ?
     `, categoryName)
 	if err != nil {
