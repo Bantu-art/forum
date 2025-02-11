@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="../static/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
+
 <body>
     <nav class="navbar">
         <div class="nav-container">
@@ -29,7 +31,7 @@
                 <button id="theme-toggle" class="theme-toggle">
                     <i class="fas fa-moon"></i>
                 </button>
-    
+
                 <!-- Mobile Categories Section -->
                 <div class="mobile-menu-section">
                     <button class="menu-toggle-btn">
@@ -47,7 +49,7 @@
                         </ul>
                     </div>
                 </div>
-    
+
                 <!-- Mobile Filters Section -->
                 <div class="mobile-menu-section">
                     <button class="menu-toggle-btn">
@@ -73,11 +75,11 @@
             <div class="profile-header">
                 <div class="profile-pic-section">
                     {{if .ProfilePic.Valid}}
-                        <img src="{{.ProfilePic.String}}" alt="Profile Picture" class="profile-pic">
+                    <img src="{{.ProfilePic.String}}" alt="Profile Picture" class="profile-pic">
                     {{else}}
-                        <div class="profile-pic-placeholder">
-                            <i class="fas fa-user"></i>
-                        </div>
+                    <div class="profile-pic-placeholder">
+                        <i class="fas fa-user"></i>
+                    </div>
                     {{end}}
                 </div>
                 <div class="profile-info">
@@ -100,24 +102,30 @@
     </main>
 
     <script>
-      document.addEventListener('DOMContentLoaded', function () {
-    const hamburgerBtn = document.querySelector('.hamburger-btn');
-    const mobileMenuOverlay = document.querySelector('.mobile-menu-overlay');
-    const navRight = document.querySelector('.nav-right');
 
-    // Toggle the menu visibility
-    hamburgerBtn.addEventListener('click', function () {
-        navRight.classList.toggle('show-menu');
-        mobileMenuOverlay.classList.toggle('show-overlay');
-    });
+        document.getElementById('profile_pic').addEventListener('change', function () {
+            document.getElementById('profile-pic-form').submit();
+        });
+        document.addEventListener('DOMContentLoaded', function () {
+            const hamburgerBtn = document.querySelector('.hamburger-btn');
+            const mobileMenuOverlay = document.querySelector('.mobile-menu-overlay');
+            const navRight = document.querySelector('.nav-right');
 
-    // Close the menu when clicking outside of it
-    mobileMenuOverlay.addEventListener('click', function () {
-        navRight.classList.remove('show-menu');
-        mobileMenuOverlay.classList.remove('show-overlay');
-    });
-});
+            // Toggle the menu visibility
+            hamburgerBtn.addEventListener('click', function () {
+                navRight.classList.toggle('show-menu');
+                mobileMenuOverlay.classList.toggle('show-overlay');
+            });
+
+            // Close the menu when clicking outside of it
+            mobileMenuOverlay.addEventListener('click', function () {
+                navRight.classList.remove('show-menu');
+                mobileMenuOverlay.classList.remove('show-overlay');
+            });
+
+        });
 
     </script>
 </body>
+
 </html>
