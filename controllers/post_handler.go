@@ -83,6 +83,20 @@ func (ph *PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		} else {
 			utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
 		}
+	case "/editcomment":
+		if r.Method == http.MethodPost {
+			ph.authMiddleware(ph.handleEditComment).ServeHTTP(w, r)
+		} else {
+			utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
+		}
+
+	case "/deletecomment":
+		if r.Method == http.MethodPost {
+			ph.authMiddleware(ph.handleDeleteComment).ServeHTTP(w, r)
+		} else {
+			utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
+		}
+
 	default:
 		utils.RenderErrorPage(w, http.StatusNotFound, utils.ErrPageNotFound)
 	}
@@ -466,7 +480,9 @@ func (ph *PostHandler) getPostByID(id int64) (*utils.Post, []utils.Comment, erro
 	post.PostTime = FormatTimeAgo(postTime.Local())
 	// Get comments
 	rows, err := utils.GlobalDB.Query(`
-	  SELECT c.id, c.content, c.comment_at, u.username, u.profile_pic 
+	  SELECT c.id, c.user_id, c.content, c.comment_at, u.username, u.profile_pic, 
+	         (SELECT COUNT(*) FROM comment_reaction WHERE comment_id = c.id AND is_like = 1) as likes,
+	         (SELECT COUNT(*) FROM comment_reaction WHERE comment_id = c.id AND is_like = 0) as dislikes
 	  FROM comments c
 	  JOIN users u ON c.user_id = u.id
 	  WHERE c.post_id = ?
@@ -480,7 +496,7 @@ func (ph *PostHandler) getPostByID(id int64) (*utils.Post, []utils.Comment, erro
 	for rows.Next() {
 		var c utils.Comment
 		var t time.Time
-		err := rows.Scan(&c.ID, &c.Content, &t, &c.Username, &c.ProfilePic)
+		err := rows.Scan(&c.ID, &c.UserID, &c.Content, &t, &c.Username, &c.ProfilePic, &c.Likes, &c.Dislikes)
 		if err != nil {
 			continue
 		}
@@ -673,7 +689,7 @@ func (ph *PostHandler) handleCommentReactions(w http.ResponseWriter, r *http.Req
 	}
 
 	if err == sql.ErrNoRows {
-		// No reaction exists—insert a new reaction.
+		// No reaction exists—insert a new reaction
 		_, err = utils.GlobalDB.Exec("INSERT INTO comment_reaction (user_id, comment_id, is_like) VALUES (?, ?, ?)", userID, req.CommentID, req.Like)
 		if err != nil {
 			w.Header().Set("Content-Type", "application/json")
@@ -683,7 +699,7 @@ func (ph *PostHandler) handleCommentReactions(w http.ResponseWriter, r *http.Req
 		}
 	} else {
 		if existingIsLike == req.Like {
-			// Same reaction exists; remove it.
+			// Same reaction exists; remove it
 			_, err = utils.GlobalDB.Exec("DELETE FROM comment_reaction WHERE user_id = ? AND comment_id = ?", userID, req.CommentID)
 			if err != nil {
 				w.Header().Set("Content-Type", "application/json")
@@ -692,7 +708,7 @@ func (ph *PostHandler) handleCommentReactions(w http.ResponseWriter, r *http.Req
 				return
 			}
 		} else {
-			// Reaction exists but is different; update it.
+			// Reaction exists but is different; update it
 			_, err = utils.GlobalDB.Exec("UPDATE comment_reaction SET is_like = ? WHERE user_id = ? AND comment_id = ?", req.Like, userID, req.CommentID)
 			if err != nil {
 				w.Header().Set("Content-Type", "application/json")
@@ -703,21 +719,143 @@ func (ph *PostHandler) handleCommentReactions(w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	// Fetch updated like and dislike counts for the comment.
+	// Get updated likes and dislikes counts
 	var likes, dislikes int
 	err = utils.GlobalDB.QueryRow("SELECT likes, dislikes FROM comments WHERE id = ?", req.CommentID).Scan(&likes, &dislikes)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Database error (display)"})
+		json.NewEncoder(w).Encode(map[string]string{"error": "Database error (get counts)"})
 		return
 	}
 
-	// Return the updated counts.
+	// Return success response with updated counts
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]int{
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success":  true,
 		"likes":    likes,
 		"dislikes": dislikes,
 	})
+}
+
+func (ph *PostHandler) handleEditComment(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("userID").(string)
+	if userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+
+	commentID, err := strconv.Atoi(r.FormValue("comment_id"))
+	if err != nil {
+		http.Error(w, "Invalid comment ID", http.StatusBadRequest)
+		return
+	}
+
+	newContent := r.FormValue("content")
+	if newContent == "" {
+		http.Error(w, "Comment cannot be empty", http.StatusBadRequest)
+		return
+	}
+
+	// Ensure user owns the comment
+	var ownerID string
+	err = utils.GlobalDB.QueryRow("SELECT user_id FROM comments WHERE id = ?", commentID).Scan(&ownerID)
+	if err == sql.ErrNoRows {
+		http.Error(w, "Comment not found", http.StatusNotFound)
+		return
+	} else if err != nil {
+		log.Printf("Error checking comment ownership: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	if ownerID != userID {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
+	// Update the comment
+	_, err = utils.GlobalDB.Exec("UPDATE comments SET content = ? WHERE id = ?", newContent, commentID)
+	if err != nil {
+		log.Printf("Error updating comment: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, r.Header.Get("Referer"), http.StatusSeeOther)
+}
+
+func (ph *PostHandler) handleDeleteComment(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("userID").(string)
+	if userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+
+	commentID, err := strconv.Atoi(r.FormValue("comment_id"))
+	if err != nil {
+		http.Error(w, "Invalid comment ID", http.StatusBadRequest)
+		return
+	}
+
+	// Get the post ID before deleting the comment (for updating comment count)
+	var postID int
+	err = utils.GlobalDB.QueryRow("SELECT post_id FROM comments WHERE id = ?", commentID).Scan(&postID)
+	if err != nil && err != sql.ErrNoRows {
+		log.Printf("Error getting post ID: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	// Ensure user owns the comment
+	var ownerID string
+	err = utils.GlobalDB.QueryRow("SELECT user_id FROM comments WHERE id = ?", commentID).Scan(&ownerID)
+	if err == sql.ErrNoRows {
+		http.Error(w, "Comment not found", http.StatusNotFound)
+		return
+	} else if err != nil {
+		log.Printf("Error checking comment ownership: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	if ownerID != userID {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
+	// Delete the comment
+	_, err = utils.GlobalDB.Exec("DELETE FROM comments WHERE id = ?", commentID)
+	if err != nil {
+		log.Printf("Error deleting comment: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	// Update the post's comment count
+	if postID > 0 {
+		_, err = utils.GlobalDB.Exec(`
+			UPDATE posts 
+			SET comments = (
+				SELECT COUNT(*) 
+				FROM comments 
+				WHERE post_id = ?
+			) 
+			WHERE id = ?`, postID, postID)
+		if err != nil {
+			log.Printf("Error updating post comment count: %v", err)
+		}
+	}
+
+	http.Redirect(w, r, r.Header.Get("Referer"), http.StatusSeeOther)
 }
