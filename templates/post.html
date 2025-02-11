@@ -162,17 +162,17 @@
                     <!-- Comment Reaction Buttons -->
                     <div class="comment-reaction-buttons">
                         <div class="action-container">
-                            <button class="action-btn like-btn" onclick="event.stopPropagation();" data-post-id="{{.ID}}" data-action="like">
+                            <button class="action-btn comment-like-btn" data-comment-id="{{.ID}}" data-action="like">
                                 <i class="fas fa-heart"></i>
-                                <span class="count" id="likes-{{.ID}}">{{.Likes}}</span>
+                                <span class="count" id="comment-likes-{{.ID}}">{{.Likes}}</span>
                             </button>
-                            </div>
-                            <div class="action-container">
-                                <button class="action-btn dislike-btn" onclick="event.stopPropagation();" data-post-id="{{.ID}}" data-action="dislike">
-                                    <i class="fas fa-thumbs-down"></i>
-                                    <span class="count" id="dislikes-{{.ID}}">{{.Dislikes}}</span>
-                                </button>
-                                </div>
+                        </div>
+                        <div class="action-container">
+                            <button class="action-btn comment-dislike-btn" data-comment-id="{{.ID}}" data-action="dislike">
+                                <i class="fas fa-thumbs-down"></i>
+                                <span class="count" id="comment-dislikes-{{.ID}}">{{.Dislikes}}</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 {{end}}
