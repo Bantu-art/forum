@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"forum/controllers"
-	"forum/handlers"
+	"forum/authentication"
 	"forum/utils"
 )
 
