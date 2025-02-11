@@ -53,8 +53,9 @@ function handleReaction(event) {
     });
 }
 
-// Handler for comment reactions (modified to mirror the post reaction handler)
+// Handler for comment reactions
 function handleCommentReaction(event) {
+    event.preventDefault();
     event.stopPropagation(); // Prevent any unwanted propagation
 
     const button = event.currentTarget;
@@ -95,7 +96,6 @@ function handleCommentReaction(event) {
         // Update the comment's like and dislike counts on the page
         const likesElement = document.getElementById(`comment-likes-${commentID}`);
         const dislikesElement = document.getElementById(`comment-dislikes-${commentID}`);
-        console.log(likesElement)
         
         if (likesElement && dislikesElement) {
             likesElement.textContent = data.likes;
