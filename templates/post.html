@@ -161,7 +161,7 @@
                     </div>
                     {{if eq .UserID $.CurrentUserID}}
                     <div class="comment-actions">
-                        <button onclick="editComment('{{.ID}}')" class="edit-btn">
+                        <button onclick="editComment({{.ID}})" class="edit-btn">
                             <i class="fas fa-edit"></i> Edit
                         </button>
                         <form class="delete-comment-form" method="POST" action="/deletecomment" style="display: inline;">

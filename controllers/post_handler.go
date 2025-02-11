@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"forum/utils"
@@ -756,7 +757,7 @@ func (ph *PostHandler) handleEditComment(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	newContent := r.FormValue("content")
+	newContent := strings.TrimSpace(r.FormValue("content"))
 	if newContent == "" {
 		http.Error(w, "Comment cannot be empty", http.StatusBadRequest)
 		return
@@ -780,11 +781,18 @@ func (ph *PostHandler) handleEditComment(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Update the comment
-	_, err = utils.GlobalDB.Exec("UPDATE comments SET content = ? WHERE id = ?", newContent, commentID)
+	result, err := utils.GlobalDB.Exec("UPDATE comments SET content = ? WHERE id = ?", newContent, commentID)
 	if err != nil {
 		log.Printf("Error updating comment: %v", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		log.Printf("Error getting rows affected: %v", err)
+	} else if rowsAffected == 0 {
+		log.Printf("No rows were updated for comment ID: %d", commentID)
 	}
 
 	http.Redirect(w, r, r.Header.Get("Referer"), http.StatusSeeOther)
