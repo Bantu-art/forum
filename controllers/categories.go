@@ -58,7 +58,7 @@ func (ch *CategoryHandler) handleGetCategories(w http.ResponseWriter, _ *http.Re
 		return
 	}
 
-	tmpl, err := template.ParseFiles("templates/categories.html")
+	tmpl, err := template.ParseFiles("templates/category_posts.html")
 	if err != nil {
 		log.Printf("Error parsing categories template: %v", err)
 		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateExec)
