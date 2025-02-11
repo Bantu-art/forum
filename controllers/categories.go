@@ -25,17 +25,6 @@ func (ch *CategoryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		} else {
 			utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
 		}
-	// case "/categories/posts":
-	// 	if r.Method == http.MethodGet {
-	// 		categoryID := r.URL.Query().Get("id")
-	// 		if categoryID == "" {
-	// 			utils.RenderErrorPage(w, http.StatusBadRequest, utils.ErrInvalidForm)
-	// 			return
-	// 		}
-	// 		ch.handleGetPostsByCategory(w, r, categoryID)
-	// 	} else {
-	// 		utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
-	// 	}
 	case "/category":
 		if r.Method == http.MethodGet {
 			categoryName := r.URL.Query().Get("name")
