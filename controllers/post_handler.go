@@ -673,7 +673,7 @@ func (ph *PostHandler) handleCommentReactions(w http.ResponseWriter, r *http.Req
 	}
 
 	if err == sql.ErrNoRows {
-		// No reaction exists—insert a new reaction.
+		// No reaction exists—insert a new reaction
 		_, err = utils.GlobalDB.Exec("INSERT INTO comment_reaction (user_id, comment_id, is_like) VALUES (?, ?, ?)", userID, req.CommentID, req.Like)
 		if err != nil {
 			w.Header().Set("Content-Type", "application/json")
@@ -683,7 +683,7 @@ func (ph *PostHandler) handleCommentReactions(w http.ResponseWriter, r *http.Req
 		}
 	} else {
 		if existingIsLike == req.Like {
-			// Same reaction exists; remove it.
+			// Same reaction exists; remove it
 			_, err = utils.GlobalDB.Exec("DELETE FROM comment_reaction WHERE user_id = ? AND comment_id = ?", userID, req.CommentID)
 			if err != nil {
 				w.Header().Set("Content-Type", "application/json")
@@ -692,7 +692,7 @@ func (ph *PostHandler) handleCommentReactions(w http.ResponseWriter, r *http.Req
 				return
 			}
 		} else {
-			// Reaction exists but is different; update it.
+			// Reaction exists but is different; update it
 			_, err = utils.GlobalDB.Exec("UPDATE comment_reaction SET is_like = ? WHERE user_id = ? AND comment_id = ?", req.Like, userID, req.CommentID)
 			if err != nil {
 				w.Header().Set("Content-Type", "application/json")
@@ -703,20 +703,20 @@ func (ph *PostHandler) handleCommentReactions(w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	// Fetch updated like and dislike counts for the comment.
+	// Get updated likes and dislikes counts
 	var likes, dislikes int
 	err = utils.GlobalDB.QueryRow("SELECT likes, dislikes FROM comments WHERE id = ?", req.CommentID).Scan(&likes, &dislikes)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Database error (display)"})
+		json.NewEncoder(w).Encode(map[string]string{"error": "Database error (get counts)"})
 		return
 	}
 
-	// Return the updated counts.
+	// Return success response with updated counts
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]int{
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success":  true,
 		"likes":    likes,
 		"dislikes": dislikes,
 	})
