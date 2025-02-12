@@ -488,16 +488,8 @@ body {
     color: black;
     transition: all 0.3s ease;
   }
-  
-  .comment-input:focus {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.3);
-    outline: none;
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
-  }
-  
   .comment-input::placeholder {
-    color: white;
+    color: rgb(63, 56, 56);
   }
   
   .submit-button {
@@ -675,6 +667,7 @@ body {
 .edit-btn,
 .delete-btn {
     padding: 4px 8px;
+    background-image: url('images/MuchaTseBle.jpeg');
     border: none;
     border-radius: 4px;
     cursor: pointer;

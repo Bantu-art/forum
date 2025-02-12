@@ -78,14 +78,17 @@
                 <div class="form-group">
                     <label for="post-categories">Categories</label>
                     <div id="post-categories">
-                        <label><input type="checkbox" name="categories[]" value="Tech"  > Tech</label>
-                        <label><input type="checkbox" name="categories[]" value="Programming"  > Programming</label>
-                        <label><input type="checkbox" name="categories[]" value="Business" > Business</label>
-                        <label><input type="checkbox" name="categories[]" value="Lifestyle" > Lifestyle</label>
-                        <label><input type="checkbox" name="categories[]" value="Football" > Football</label>
-                        <label><input type="checkbox" name="categories[]" value="Politics" > Politics</label>
-                        <label><input type="checkbox" name="categories[]" value="General News" > General News</label>
+
+                        <label><input type="checkbox" name="categories[]" value="Tech"> Tech</label>
+                        <label><input type="checkbox" name="categories[]" value="Programming"> Programming</label>
+                        <label><input type="checkbox" name="categories[]" value="Business"> Business</label>
+                        <label><input type="checkbox" name="categories[]" value="Lifestyle"> Lifestyle</label>
+                        <label><input type="checkbox" name="categories[]" value="Football"> Football</label>
+                        <label><input type="checkbox" name="categories[]" value="Politics"> Politics</label>
+                        <label><input type="checkbox" name="categories[]" value="General News"> General News</label>
                     </div>
+                    <p><small>You need select at least one category to proceed.</small></p>
+                    <div class="error-message" id="category-error" style="display: none; color: red;">You need select at least one category to proceed.</div>
                 </div>
 
                 <div class="form-actions">
