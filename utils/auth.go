@@ -25,7 +25,17 @@ func ValidateEmail(email string) bool {
 }
 
 func ValidateUsername(username string) bool {
-	return len(username) >= 3 && len(username) <= 30
+	hasLetter := false
+	hasNumber := false
+	for _, char := range username {
+		if unicode.IsLetter(char) {
+			hasLetter = true
+		}
+		if unicode.IsDigit(char) {
+			hasNumber = true
+		}
+	}
+	return len(username) >= 3 && len(username) <= 30 && hasLetter && hasNumber
 }
 
 func ValidatePassword(password string) bool {
