@@ -4,13 +4,17 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
+	handlers "forum/authentication"
 	"forum/controllers"
-	"forum/authentication"
 	"forum/utils"
 )
 
 func main() {
+	if len(os.Args) != 1 {
+		log.Fatal("Usage: go run main.go ")
+	}
 	// Initialize database
 	db, err := utils.InitialiseDB()
 	if err != nil {
