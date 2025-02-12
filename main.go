@@ -57,7 +57,7 @@ func main() {
 		referer := r.Header.Get("Referer")
 		if referer == "" || !strings.Contains(referer, r.Host) {
 			log.Printf("Blocked direct access attempt to: %s from: %s", r.URL.Path, r.RemoteAddr)
-			utils.RenderErrorPage(w, http.StatusForbidden, "Forbidden")
+			utils.RenderErrorPage(w, http.StatusForbidden, http.StatusText(http.StatusForbidden))
 			return
 		}
 
