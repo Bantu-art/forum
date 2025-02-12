@@ -20,7 +20,8 @@
             justify-content: center;
             align-items: center;
             background-size: 100% 100%;
-            /* animation: gradientBG 10s ease infinite; */
+            /* animation: gradientBG 50s ease infinite; */
+            padding: 2rem 0;
         }
 
         @keyframes gradientBG {
@@ -31,7 +32,7 @@
 
         .auth-wrapper {
             width: 90%;
-            max-width: 400px;
+            max-width: 450px;
             padding: 2rem;
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(5px);
@@ -40,16 +41,25 @@
             border: 1px solid rgba(255, 255, 255, 0.18);
         }
 
-        .auth-form {
-            width: 100%;
-        }
-
         .auth-title {
             color: white;
             text-align: center;
             margin-bottom: 2rem;
             font-size: 2rem;
             font-weight: 600;
+        }
+
+        .global-error {
+            background: rgba(255, 87, 87, 0.2);
+            color: white;
+            padding: 0.8rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .auth-form {
+            width: 100%;
         }
 
         .input-block {
@@ -83,28 +93,43 @@
             color: rgba(255, 255, 255, 0.7);
         }
 
+        .input-field.error {
+            border: 1px solid rgba(255, 87, 87, 0.5);
+            background: rgba(255, 87, 87, 0.1);
+        }
+
         .validation-message {
-            color: #a5613a;
+            color: #FFD93D;
             font-size: 0.8rem;
             margin-top: 0.5rem;
         }
 
-        .global-error {
-            background: rgba(255, 87, 87, 0.2);
+        .visibility-toggle {
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .visibility-toggle label {
             color: white;
-            padding: 0.8rem;
-            border-radius: 10px;
-            margin-bottom: 1rem;
-            text-align: center;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .visibility-toggle input[type="checkbox"] {
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
         }
 
         .submit-btn {
             width: 100%;
             padding: 0.8rem;
-            background: rgba(255, 255, 255, 0.2);
+            background: black;
             border: none;
             border-radius: 10px;
-            color: rgb(211, 199, 199);
+            color: white;
             font-size: 1rem;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -115,19 +140,19 @@
             transform: translateY(-2px);
         }
 
-        .register-link {
+        .register-lin {
             text-align: center;
             margin-top: 1.5rem;
+            /* color: red !important; */
         }
 
-        .register-text {
+        .login-text {
             color: white;
             text-decoration: none;
             font-size: 0.9rem;
             transition: all 0.3s ease;
         }
-
-        .register-text:hover {
+        .regidter-text:hover {
             text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
         }
     </style>
@@ -160,13 +185,26 @@
                            placeholder="Input your password"
                            class="input-field" required>
                 </div>
+                <div class="visibility-toggle">
+                    <input type="checkbox" id="show-password">
+                    <label for="show-password">Show password</label>
+                </div>
     
                 <button type="submit" class="submit-btn">Sign In</button>
             </form>
     
-            <div class="login-link">
+            <div class="register-lin">
                 <a href="/signup" class="login-text">Don't have an account? Sign up</a>
             </div>
         </div>
+        <script>
+            document.getElementById('show-password').addEventListener('change', function() {
+                const passwordInput = document.getElementById('password');
+                const confirmPasswordInput = document.getElementById('confirm-password');
+                const type = this.checked ? 'text' : 'password';
+                passwordInput.type = type;
+                confirmPasswordInput.type = type;
+            });
+        </script>
 </body>
 </html>
