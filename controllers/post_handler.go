@@ -286,7 +286,7 @@ func (ph *PostHandler) handleCreatePost(w http.ResponseWriter, r *http.Request) 
 	data.Content = r.FormValue("content")
 	data.SelectedCats = r.Form["categories[]"]
 
-	if title == "" || content == "" || len(categories) == 0 {
+	if data.Title == "" || data.Content == "" || len(data.Categories) == 0 {
 		log.Printf("Title, content, and category are required")
 		ph.displayCreateForm(w, r)
 		return
