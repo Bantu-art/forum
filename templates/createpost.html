@@ -10,7 +10,9 @@
 <body>
     <nav class="navbar">
         <div class="nav-container">
-            <h1 class="logo">Forum</h1>
+            <a href="/" class="logo-link">
+                <h1 class="logo">Forum</h1>
+              </a>
             <div class="nav-right">
                 <button id="create-post-btn" class="btn btn-primary" onclick="window.location.href='/create'">
                     <i class="fas fa-plus"></i> Create Post
@@ -62,16 +64,15 @@
 
                 <div class="form-group">
                     <label for="post-categories">Categories</label>
-                    <select name="categories[]" id="post-categories" multiple size="8">
-                        <option value="Tech">Tech</option>
-                        <option value="Programming">Programming</option>
-                        <option value="Business">Business</option>
-                        <option value="Lifestyle">Lifestyle</option>
-                        <option value="Football">Football</option>
-                        <option value="Politics">Politics</option>
-                        <option value="General News">General News</option>
-                    </select>
-                    <p><small>Hold Ctrl (Windows) or Command (Mac) to select multiple categories.</small></p>
+                    <div id="post-categories">
+                        <label><input type="checkbox" name="categories[]" value="Tech" required > Tech</label>
+                        <label><input type="checkbox" name="categories[]" value="Programming" required > Programming</label>
+                        <label><input type="checkbox" name="categories[]" value="Business" required > Business</label>
+                        <label><input type="checkbox" name="categories[]" value="Lifestyle" required> Lifestyle</label>
+                        <label><input type="checkbox" name="categories[]" value="Football" required > Football</label>
+                        <label><input type="checkbox" name="categories[]" value="Politics" required > Politics</label>
+                        <label><input type="checkbox" name="categories[]" value="General News" required > General News</label>
+                    </div>
                 </div>
 
                 <div class="form-actions">
