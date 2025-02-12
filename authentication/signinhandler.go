@@ -59,15 +59,20 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 			WHERE username = ?
 		`, username).Scan(&user.ID, &user.Password)
 		if err != nil {
-			if err == sql.ErrNoRows {
-				data.GeneralError = "Invalid username or password"
-			} else {
-				data.GeneralError = "An error occurred. Please try again later."
-			}
-			utils.RenderErrorPage(w, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
-			log.Printf("Error querying database: %v", err)
-			return
-		}
+        data := struct {
+            GeneralError string
+            Username     string
+        }{
+            GeneralError: "Invalid username or password",
+            Username:     username,
+        }
+        tmpl, _ := template.ParseFiles("templates/signin.html")
+        tmpl.Execute(w, data)
+        if err != sql.ErrNoRows {
+            log.Printf("Error querying database: %v", err)
+        }
+        return
+    }
 
 		if !utils.CheckPasswordsHash(password, user.Password) {
 			data.GeneralError = "Invalid username or password"

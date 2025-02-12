@@ -161,7 +161,7 @@
         <div class="auth-wrapper">
             <h1 class="auth-title">Sign Up</h1>
             
-            {{if .Errors.GeneralError}}
+            {{if .Errors.GeneralError }}
             <div class="global-error">
                 {{.Errors.GeneralError}}
             </div>
@@ -175,7 +175,7 @@
                            id="username" 
                            class="input-field {{if .Errors.UsernameError}}error{{end}}"
                            placeholder="Input your name"
-                           value="{{.UserName}}">
+                           value="{{.UserName}}" required>
                     {{if .Errors.UsernameError}}
                     <div class="validation-message">{{.Errors.UsernameError}}</div>
                     {{end}}
@@ -188,7 +188,7 @@
                            id="email" 
                            class="input-field {{if .Errors.EmailError}}error{{end}}"
                            placeholder="Input email"
-                           value="{{.Email}}">
+                           value="{{.Email}}" required>
                     {{if .Errors.EmailError}}
                     <div class="validation-message">{{.Errors.EmailError}}</div>
                     {{end}}
@@ -200,7 +200,7 @@
                            name="password" 
                            id="password" 
                            placeholder="Input password"
-                           class="input-field {{if .Errors.PasswordError}}error{{end}}">
+                           class="input-field {{if .Errors.PasswordError}}error{{end}}" required>
                     {{if .Errors.PasswordError}}
                     <div class="validation-message">{{.Errors.PasswordError}}</div>
                     {{end}}
@@ -212,7 +212,7 @@
                            name="confirm-password" 
                            id="confirm-password" 
                            placeholder="Confirm password"
-                           class="input-field {{if .Errors.PasswordError}}error{{end}}">
+                           class="input-field {{if .Errors.PasswordError}}error{{end}}" required>
                 </div>
     
                 <div class="visibility-toggle">

@@ -106,5 +106,5 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	
-	http.Redirect(w, r, "/signin", http.StatusSeeOther)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
