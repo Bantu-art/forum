@@ -60,7 +60,7 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if !utils.ValidateUsername(data.UserName) {
-			errors.UsernameError = "Username must be between 3 and 30 characters, must"
+			errors.UsernameError = "Username must be between 3 and 30 characters made of letters and numbers or letters only"
 			hasError = true
 		}
 
@@ -105,6 +105,6 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	
+
 	http.Redirect(w, r, "/signin", http.StatusSeeOther)
 }
