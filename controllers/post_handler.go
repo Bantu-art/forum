@@ -819,50 +819,43 @@ func (ph *PostHandler) handleDeleteComment(w http.ResponseWriter, r *http.Reques
 	// Get the post ID before deleting the comment (for updating comment count)
 	var postID int
 	err = utils.GlobalDB.QueryRow("SELECT post_id FROM comments WHERE id = ?", commentID).Scan(&postID)
-	if err != nil && err != sql.ErrNoRows {
-		log.Printf("Error getting post ID: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			http.Error(w, "Comment not found", http.StatusNotFound)
+		} else {
+			log.Printf("Error querying post ID for comment ID %d: %v", commentID, err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+		}
 		return
 	}
 
-	// Ensure user owns the comment
-	var ownerID string
-	err = utils.GlobalDB.QueryRow("SELECT user_id FROM comments WHERE id = ?", commentID).Scan(&ownerID)
-	if err == sql.ErrNoRows {
-		http.Error(w, "Comment not found", http.StatusNotFound)
-		return
-	} else if err != nil {
-		log.Printf("Error checking comment ownership: %v", err)
+	// Delete comment reactions
+	_, err = utils.GlobalDB.Exec("DELETE FROM comment_reaction WHERE comment_id = ?", commentID)
+	if err != nil {
+		log.Printf("Error deleting comment reactions for comment ID %d: %v", commentID, err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	if ownerID != userID {
-		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
 
 	// Delete the comment
-	_, err = utils.GlobalDB.Exec("DELETE FROM comments WHERE id = ?", commentID)
+	result, err := utils.GlobalDB.Exec("DELETE FROM comments WHERE id = ? AND user_id = ?", commentID, userID)
 	if err != nil {
-		log.Printf("Error deleting comment: %v", err)
+		log.Printf("Error deleting comment ID %d: %v", commentID, err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	// Update the post's comment count
-	if postID > 0 {
-		_, err = utils.GlobalDB.Exec(`
-			UPDATE posts 
-			SET comments = (
-				SELECT COUNT(*) 
-				FROM comments 
-				WHERE post_id = ?
-			) 
-			WHERE id = ?`, postID, postID)
-		if err != nil {
-			log.Printf("Error updating post comment count: %v", err)
-		}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		log.Printf("Error getting rows affected: %v", err)
+	} else if rowsAffected == 0 {
+		log.Printf("No rows were deleted for comment ID: %d", commentID)
+	}
+
+	// Update the comment count for the post
+	_, err = utils.GlobalDB.Exec("UPDATE posts SET comments = comments - 1 WHERE id = ?", postID)
+	if err != nil {
+		log.Printf("Error updating comment count for post ID %d: %v", postID, err)
 	}
 
 	http.Redirect(w, r, r.Header.Get("Referer"), http.StatusSeeOther)
