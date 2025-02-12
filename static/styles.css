@@ -1079,3 +1079,12 @@ body {
         .change-photo-link:hover {
             text-decoration: none;
         }
+
+        .error-message {
+          background-color: #ffebee;
+          color: #c62828;
+          padding: 1rem;
+          border-radius: 4px;
+          margin-bottom: 1rem;
+          border: 1px solid #ef9a9a;
+      }
