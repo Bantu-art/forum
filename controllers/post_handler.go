@@ -102,42 +102,43 @@ func (ph *PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		utils.RenderErrorPage(w, http.StatusNotFound, utils.ErrPageNotFound)
 	}
 }
+type createPostData struct {
+    ErrorMessage   string
+    Title         string
+    Content       string
+    Categories    []utils.Category
+    SelectedCats  []string
+    IsLoggedIn    bool
+    CurrentUserID string
+}
 
 func (ph *PostHandler) displayCreateForm(w http.ResponseWriter, r *http.Request) {
-	categories, err := ph.getAllCategories()
-	if err != nil {
-		log.Printf("Error fetching categories: %v", err)
-		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrCategoryLoad)
-		return
-	}
+    categories, err := ph.getAllCategories()
+    if err != nil {
+        log.Printf("Error getting categories: %v", err)
+        utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrInternalServer)
+        return
+    }
 
-	tmpl, err := template.ParseFiles("templates/createpost.html")
-	if err != nil {
-		log.Printf("Error parsing create form template: %v", err)
-		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateLoad)
-		return
-	}
+    userID := r.Context().Value("userID").(string)
+    data := createPostData{
+        Categories:    categories,
+        IsLoggedIn:   userID != "",
+        CurrentUserID: userID,
+    }
 
-	data := struct {
-		Categories    []utils.Category
-		CurrentUserID string
-		IsLoggedIn    bool
-	}{
-		Categories: categories,
-		IsLoggedIn: ph.checkAuthStatus(r),
-	}
-	if cookie, err := r.Cookie("session_token"); err == nil {
-		if userID, err := utils.ValidateSession(utils.GlobalDB, cookie.Value); err == nil {
-			data.CurrentUserID = userID
-		}
-	}
+    tmpl, err := template.ParseFiles("templates/createpost.html")
+    if err != nil {
+        log.Printf("Error parsing template: %v", err)
+        utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateLoad)
+        return
+    }
 
-	if err := tmpl.Execute(w, data); err != nil {
-		log.Printf("Error executing create form template: %v", err)
-		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateExec)
-		return
-	}
+    if err := tmpl.Execute(w, data); err != nil {
+        log.Printf("Error executing template: %v", err)
+    }
 }
+
 
 func (ph *PostHandler) getAllCategories() ([]utils.Category, error) {
 	rows, err := utils.GlobalDB.Query("SELECT id, name FROM categories")
@@ -260,86 +261,94 @@ func (ph *PostHandler) getAllPosts() ([]utils.Post, error) {
 }
 
 func (ph *PostHandler) handleCreatePost(w http.ResponseWriter, r *http.Request) {
-	// Get userID from context
-	userID := r.Context().Value("userID").(string)
-	if userID == "" {
-		utils.RenderErrorPage(w, http.StatusUnauthorized, utils.ErrUnauthorized)
-		return
-	}
+    userID := r.Context().Value("userID").(string)
+    
+    tmpl, err := template.ParseFiles("templates/createpost.html")
+    if err != nil {
+        log.Printf("Error parsing template: %v", err)
+        utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateLoad)
+        return
+    }
 
-	if err := r.ParseMultipartForm(10 << 20); err != nil {
-		log.Printf("Error parsing form: %v", err)
-		utils.RenderErrorPage(w, http.StatusBadRequest, utils.ErrInvalidForm)
-		return
-	}
+    data := createPostData{
+        IsLoggedIn:   true,
+        CurrentUserID: userID,
+    }
 
-	// Get form values
-	title := r.FormValue("title")
-	content := r.FormValue("content")
-	categories := r.Form["categories[]"]
+    if err := r.ParseMultipartForm(10 << 20); err != nil {
+        data.ErrorMessage = "File size too large. Maximum size is 10MB"
+        tmpl.Execute(w, data)
+        return
+    }
 
-	if title == "" || content == "" || len(categories) == 0 {
-		log.Printf("Title, content, and category are required")
-		utils.RenderErrorPage(w, http.StatusBadRequest, utils.ErrInvalidForm)
-		return
-	}
+    // Get form values
+    data.Title = r.FormValue("title")
+    data.Content = r.FormValue("content")
+    data.SelectedCats = r.Form["categories[]"]
 
-	// Handle image upload
-	var imagePath string
-	file, header, err := r.FormFile("image")
-	if err == nil {
-		defer file.Close()
-		imagePath, err = ph.imageHandler.ProcessImage(file, header)
-		if err != nil {
-			log.Printf("Error processing image: %v", err)
-			utils.RenderErrorPage(w, http.StatusBadRequest, err.Error())
-			return
-		}
-	}
+    if data.Title == "" || data.Content == "" || len(data.SelectedCats) == 0 {
+        data.ErrorMessage = "Title, content, and at least one category are required"
+        tmpl.Execute(w, data)
+        return
+    }
 
-	// Prepare the insert statement with image support
-	stmt, err := utils.GlobalDB.Prepare(`
-        INSERT INTO posts (user_id, title, content, imagepath, post_at, likes, dislikes, comments) 
-        VALUES (?, ?, ?, ?, ?, 0, 0, 0)
+    // Handle image upload
+    var imagePath string
+    file, header, err := r.FormFile("image")
+    if err == nil {
+        defer file.Close()
+        
+        // Check file size
+        if header.Size > 10<<20 { // 10 MB
+            data.ErrorMessage = "Image size must be less than 10MB"
+            tmpl.Execute(w, data)
+            return
+        }
+
+        imagePath, err = ph.imageHandler.ProcessImage(file, header)
+        if err != nil {
+            data.ErrorMessage = "Error processing image: " + err.Error()
+            tmpl.Execute(w, data)
+            return
+        }
+    }
+
+    // Create post
+    currentTime := time.Now().Format("2006-01-02 15:04:05")
+    stmt, err := utils.GlobalDB.Prepare(`
+        INSERT INTO posts (user_id, title, content, imagepath, post_at)
+        VALUES (?, ?, ?, ?, ?)
     `)
-	if err != nil {
-		log.Printf("Error preparing statement: %v", err)
-		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrInternalServer)
-		return
-	}
-	defer stmt.Close()
+    if err != nil {
+        data.ErrorMessage = "Error creating post"
+        tmpl.Execute(w, data)
+        return
+    }
+    defer stmt.Close()
 
-	// Execute the insert
-	currentTime := time.Now()
-	result, err := stmt.Exec(userID, title, content, imagePath, currentTime)
-	if err != nil {
-		log.Printf("Error executing insert: %v", err)
-		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrInternalServer)
-		return
-	}
+    result, err := stmt.Exec(userID, data.Title, data.Content, imagePath, currentTime)
+    if err != nil {
+        data.ErrorMessage = "Error saving post"
+        tmpl.Execute(w, data)
+        return
+    }
 
-	postID, _ := result.LastInsertId()
+    postID, _ := result.LastInsertId()
 
-	for _, categoryName := range categories {
-		categoryID, err := getCategoryIDByName(categoryName)
-		if err != nil {
-			log.Printf("Error getting category ID for %s: %v", categoryName, err)
-			continue
-		}
-		_, err = utils.GlobalDB.Exec(`
+    // Add categories
+    for _, categoryName := range data.SelectedCats {
+        categoryID, err := getCategoryIDByName(categoryName)
+        if err != nil {
+            continue
+        }
+        utils.GlobalDB.Exec(`
             INSERT INTO post_categories (post_id, category_id) 
             VALUES (?, ?)
         `, postID, categoryID)
-		if err != nil {
-			log.Printf("Error inserting into post_categories: %v", err)
-		}
-	}
+    }
 
-	log.Printf("Successfully created post with ID: %d", postID)
-
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+    http.Redirect(w, r, "/", http.StatusSeeOther)
 }
-
 func getCategoryIDByName(name string) (int, error) {
 	var id int
 	err := utils.GlobalDB.QueryRow("SELECT id FROM categories WHERE name = ?", name).Scan(&id)
@@ -819,43 +828,50 @@ func (ph *PostHandler) handleDeleteComment(w http.ResponseWriter, r *http.Reques
 	// Get the post ID before deleting the comment (for updating comment count)
 	var postID int
 	err = utils.GlobalDB.QueryRow("SELECT post_id FROM comments WHERE id = ?", commentID).Scan(&postID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			http.Error(w, "Comment not found", http.StatusNotFound)
-		} else {
-			log.Printf("Error querying post ID for comment ID %d: %v", commentID, err)
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
-		}
+	if err != nil && err != sql.ErrNoRows {
+		log.Printf("Error getting post ID: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	// Delete comment reactions
-	_, err = utils.GlobalDB.Exec("DELETE FROM comment_reaction WHERE comment_id = ?", commentID)
-	if err != nil {
-		log.Printf("Error deleting comment reactions for comment ID %d: %v", commentID, err)
+	// Ensure user owns the comment
+	var ownerID string
+	err = utils.GlobalDB.QueryRow("SELECT user_id FROM comments WHERE id = ?", commentID).Scan(&ownerID)
+	if err == sql.ErrNoRows {
+		http.Error(w, "Comment not found", http.StatusNotFound)
+		return
+	} else if err != nil {
+		log.Printf("Error checking comment ownership: %v", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	if ownerID != userID {
+		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
 
 	// Delete the comment
-	result, err := utils.GlobalDB.Exec("DELETE FROM comments WHERE id = ? AND user_id = ?", commentID, userID)
+	_, err = utils.GlobalDB.Exec("DELETE FROM comments WHERE id = ?", commentID)
 	if err != nil {
-		log.Printf("Error deleting comment ID %d: %v", commentID, err)
+		log.Printf("Error deleting comment: %v", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		log.Printf("Error getting rows affected: %v", err)
-	} else if rowsAffected == 0 {
-		log.Printf("No rows were deleted for comment ID: %d", commentID)
-	}
-
-	// Update the comment count for the post
-	_, err = utils.GlobalDB.Exec("UPDATE posts SET comments = comments - 1 WHERE id = ?", postID)
-	if err != nil {
-		log.Printf("Error updating comment count for post ID %d: %v", postID, err)
+	// Update the post's comment count
+	if postID > 0 {
+		_, err = utils.GlobalDB.Exec(`
+			UPDATE posts 
+			SET comments = (
+				SELECT COUNT(*) 
+				FROM comments 
+				WHERE post_id = ?
+			) 
+			WHERE id = ?`, postID, postID)
+		if err != nil {
+			log.Printf("Error updating post comment count: %v", err)
+		}
 	}
 
 	http.Redirect(w, r, r.Header.Get("Referer"), http.StatusSeeOther)
