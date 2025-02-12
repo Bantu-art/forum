@@ -35,7 +35,7 @@ func ValidateUsername(username string) bool {
 			hasNumber = true
 		}
 	}
-	return len(username) >= 3 && len(username) <= 30 && hasLetter && hasNumber
+	return len(username) >= 3 && len(username) <= 30 && hasLetter && hasNumber || hasLetter
 }
 
 func ValidatePassword(password string) bool {
