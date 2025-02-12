@@ -65,14 +65,16 @@
                 <div class="form-group">
                     <label for="post-categories">Categories</label>
                     <div id="post-categories">
-                        <label><input type="checkbox" name="categories[]" value="Tech" required > Tech</label>
-                        <label><input type="checkbox" name="categories[]" value="Programming" required > Programming</label>
-                        <label><input type="checkbox" name="categories[]" value="Business" required > Business</label>
-                        <label><input type="checkbox" name="categories[]" value="Lifestyle" required> Lifestyle</label>
-                        <label><input type="checkbox" name="categories[]" value="Football" required > Football</label>
-                        <label><input type="checkbox" name="categories[]" value="Politics" required > Politics</label>
-                        <label><input type="checkbox" name="categories[]" value="General News" required > General News</label>
+                        <label><input type="checkbox" name="categories[]" value="Tech"> Tech</label>
+                        <label><input type="checkbox" name="categories[]" value="Programming"> Programming</label>
+                        <label><input type="checkbox" name="categories[]" value="Business"> Business</label>
+                        <label><input type="checkbox" name="categories[]" value="Lifestyle"> Lifestyle</label>
+                        <label><input type="checkbox" name="categories[]" value="Football"> Football</label>
+                        <label><input type="checkbox" name="categories[]" value="Politics"> Politics</label>
+                        <label><input type="checkbox" name="categories[]" value="General News"> General News</label>
                     </div>
+                    <p><small>You need select at least one category to proceed.</small></p>
+                    <div class="error-message" id="category-error" style="display: none; color: red;">You need select at least one category to proceed.</div>
                 </div>
 
                 <div class="form-actions">
@@ -82,7 +84,17 @@
             </form>
         </div>
     </main>
-
+    <script>
+        function validateCategories() {
+            const checkboxes = document.querySelectorAll('input[name="categories[]"]');
+            let checkedOne = Array.prototype.slice.call(checkboxes).some(x => x.checked);
+            if (!checkedOne) {
+                document.getElementById('category-error').style.display = 'block';
+                return false;
+            }
+            return true;
+        }
+    </script>
     <script src="../static/image.js"></script>
        
 </body>

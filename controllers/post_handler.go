@@ -280,7 +280,7 @@ func (ph *PostHandler) handleCreatePost(w http.ResponseWriter, r *http.Request) 
 
 	if title == "" || content == "" || len(categories) == 0 {
 		log.Printf("Title, content, and category are required")
-		utils.RenderErrorPage(w, http.StatusBadRequest, utils.ErrInvalidForm)
+		ph.displayCreateForm(w, r)
 		return
 	}
 
