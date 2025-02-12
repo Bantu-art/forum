@@ -54,19 +54,71 @@ git clone https://github.com/Bantu-art/forum.git
 cd forum
 ```
 
-2. Build and run with Docker:
-```bash
-docker build -t forum .
-docker run -p 8080:8080 forum
+## Prerequisites
+
+- Docker
+
+## Building and Running the Application
+
+### Using the `buildDocker.sh` Script
+
+
+2. **Make the script executable**:
+
+```sh
+  chmod +x buildDocker.sh
 ```
 
-3. Or run locally without Docker:
-```bash
-go mod init forum
-go run .
+3. **Run the script**:
+
+```sh
+  ./buildDocker.sh
 ```
 
-The application will be available at `http://localhost:8080`
+  This script will:
+  - Build the Docker image for the application.
+  - Stop and remove any existing container with the same name.
+  - Run a new container with the built image.
+
+4. **Access the application**:
+
+  Open your web browser and navigate to `http://localhost:8000`.
+
+### Manually Using Docker Commands
+
+1. **Build the Docker image**:
+
+```sh
+  docker build -t forum .
+```
+
+2. **Run the Docker container**:
+
+```sh
+  docker run -d --name forum-container -p 8000:8000 forum
+```
+
+
+## Troubleshooting
+
+- **Check container logs**:
+
+  If you encounter any issues, you can check the logs of the running container:
+
+```sh
+  docker logs forum-container
+```
+
+- **Interactive mode**:
+
+You can run the container in interactive mode to debug:
+
+```sh
+  docker run -it --name forum-container -p 8000:8000 forum /bin/sh
+```
+
+  Once inside the container, you can manually start the application and check for any errors.
+
 
 ## Database Schema
 
@@ -135,14 +187,6 @@ forum/
 ```bash
 go test ./...
 ```
-
-## Docker Support
-
-The application is containerized using Docker for consistent deployment. The Dockerfile includes:
-- Multi-stage build
-- Minimal base image
-- Security best practices
-- Environment configuration
 
 ## Contributing
 
