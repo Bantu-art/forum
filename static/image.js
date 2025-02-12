@@ -10,3 +10,14 @@ document.getElementById('image-input').addEventListener('change', function(e) {
         reader.readAsDataURL(file);
     }
 });
+
+
+function validateCategories() {
+    const checkboxes = document.querySelectorAll('input[name="categories[]"]');
+    let checkedOne = Array.prototype.slice.call(checkboxes).some(x => x.checked);
+    if (!checkedOne) {
+        document.getElementById('category-error').style.display = 'block';
+        return false;
+    }
+    return true;
+}

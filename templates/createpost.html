@@ -75,10 +75,10 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="form-group">
                     <label for="post-categories">Categories</label>
                     <div id="post-categories">
+
                         <label><input type="checkbox" name="categories[]" value="Tech"> Tech</label>
                         <label><input type="checkbox" name="categories[]" value="Programming"> Programming</label>
                         <label><input type="checkbox" name="categories[]" value="Business"> Business</label>
@@ -98,17 +98,6 @@
             </form>
         </div>
     </main>
-    <script>
-        function validateCategories() {
-            const checkboxes = document.querySelectorAll('input[name="categories[]"]');
-            let checkedOne = Array.prototype.slice.call(checkboxes).some(x => x.checked);
-            if (!checkedOne) {
-                document.getElementById('category-error').style.display = 'block';
-                return false;
-            }
-            return true;
-        }
-    </script>
     <script src="../static/image.js"></script>
        
 </body>
