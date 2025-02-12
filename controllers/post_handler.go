@@ -114,30 +114,30 @@ type createPostData struct {
 }
 
 func (ph *PostHandler) displayCreateForm(w http.ResponseWriter, r *http.Request) {
-	categories, err := ph.getAllCategories()
-	if err != nil {
-		log.Printf("Error getting categories: %v", err)
-		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrInternalServer)
-		return
-	}
+    categories, err := ph.getAllCategories()
+    if err != nil {
+        log.Printf("Error getting categories: %v", err)
+        utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrInternalServer)
+        return
+    }
 
-	userID := r.Context().Value("userID").(string)
-	data := createPostData{
-		Categories:    categories,
-		IsLoggedIn:    userID != "",
-		CurrentUserID: userID,
-	}
+    userID := r.Context().Value("userID").(string)
+    data := createPostData{
+        Categories:    categories,
+        IsLoggedIn:   userID != "",
+        CurrentUserID: userID,
+    }
 
-	tmpl, err := template.ParseFiles("templates/createpost.html")
-	if err != nil {
-		log.Printf("Error parsing template: %v", err)
-		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateLoad)
-		return
-	}
+    tmpl, err := template.ParseFiles("templates/createpost.html")
+    if err != nil {
+        log.Printf("Error parsing template: %v", err)
+        utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateLoad)
+        return
+    }
 
-	if err := tmpl.Execute(w, data); err != nil {
-		log.Printf("Error executing template: %v", err)
-	}
+    if err := tmpl.Execute(w, data); err != nil {
+        log.Printf("Error executing template: %v", err)
+    }
 }
 
 func (ph *PostHandler) getAllCategories() ([]utils.Category, error) {
@@ -261,93 +261,93 @@ func (ph *PostHandler) getAllPosts() ([]utils.Post, error) {
 }
 
 func (ph *PostHandler) handleCreatePost(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("userID").(string)
+    userID := r.Context().Value("userID").(string)
+    
+    tmpl, err := template.ParseFiles("templates/createpost.html")
+    if err != nil {
+        log.Printf("Error parsing template: %v", err)
+        utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateLoad)
+        return
+    }
 
-	tmpl, err := template.ParseFiles("templates/createpost.html")
-	if err != nil {
-		log.Printf("Error parsing template: %v", err)
-		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrTemplateLoad)
-		return
-	}
+    data := createPostData{
+        IsLoggedIn:   true,
+        CurrentUserID: userID,
+    }
 
-	data := createPostData{
-		IsLoggedIn:    true,
-		CurrentUserID: userID,
-	}
+    if err := r.ParseMultipartForm(10 << 20); err != nil {
+        data.ErrorMessage = "File size too large. Maximum size is 10MB"
+        tmpl.Execute(w, data)
+        return
+    }
 
-	if err := r.ParseMultipartForm(10 << 20); err != nil {
-		data.ErrorMessage = "File size too large. Maximum size is 10MB"
-		tmpl.Execute(w, data)
-		return
-	}
+    // Get form values
+    data.Title = r.FormValue("title")
+    data.Content = r.FormValue("content")
+    data.SelectedCats = r.Form["categories[]"]
 
-	// Get form values
-	data.Title = r.FormValue("title")
-	data.Content = r.FormValue("content")
-	data.SelectedCats = r.Form["categories[]"]
+    if data.Title == "" || data.Content == "" || len(data.SelectedCats) == 0 {
+        data.ErrorMessage = "Title, content, and at least one category are required"
+        tmpl.Execute(w, data)
+        return
+    }
 
-	if data.Title == "" || data.Content == "" || len(data.Categories) == 0 {
-		log.Printf("Title, content, and category are required")
-		ph.displayCreateForm(w, r)
-		return
-	}
+    // Handle image upload
+    var imagePath string
+    file, header, err := r.FormFile("image")
+    if err == nil {
+        defer file.Close()
+        
+        // Check file size
+        if header.Size > 10<<20 { // 10 MB
+            data.ErrorMessage = "Image size must be less than 10MB"
+            tmpl.Execute(w, data)
+            return
+        }
 
-	// Handle image upload
-	var imagePath string
-	file, header, err := r.FormFile("image")
-	if err == nil {
-		defer file.Close()
+        imagePath, err = ph.imageHandler.ProcessImage(file, header)
+        if err != nil {
+            data.ErrorMessage = "Error processing image: " + err.Error()
+            tmpl.Execute(w, data)
+            return
+        }
+    }
 
-		// Check file size
-		if header.Size > 10<<20 { // 10 MB
-			data.ErrorMessage = "Image size must be less than 10MB"
-			tmpl.Execute(w, data)
-			return
-		}
-
-		imagePath, err = ph.imageHandler.ProcessImage(file, header)
-		if err != nil {
-			data.ErrorMessage = "Error processing image: " + err.Error()
-			tmpl.Execute(w, data)
-			return
-		}
-	}
-
-	// Create post
-	currentTime := time.Now().Format("2006-01-02 15:04:05")
-	stmt, err := utils.GlobalDB.Prepare(`
+    // Create post
+    currentTime := time.Now().Format("2006-01-02 15:04:05")
+    stmt, err := utils.GlobalDB.Prepare(`
         INSERT INTO posts (user_id, title, content, imagepath, post_at)
         VALUES (?, ?, ?, ?, ?)
     `)
-	if err != nil {
-		data.ErrorMessage = "Error creating post"
-		tmpl.Execute(w, data)
-		return
-	}
-	defer stmt.Close()
+    if err != nil {
+        data.ErrorMessage = "Error creating post"
+        tmpl.Execute(w, data)
+        return
+    }
+    defer stmt.Close()
 
-	result, err := stmt.Exec(userID, data.Title, data.Content, imagePath, currentTime)
-	if err != nil {
-		data.ErrorMessage = "Error saving post"
-		tmpl.Execute(w, data)
-		return
-	}
+    result, err := stmt.Exec(userID, data.Title, data.Content, imagePath, currentTime)
+    if err != nil {
+        data.ErrorMessage = "Error saving post"
+        tmpl.Execute(w, data)
+        return
+    }
 
-	postID, _ := result.LastInsertId()
+    postID, _ := result.LastInsertId()
 
-	// Add categories
-	for _, categoryName := range data.SelectedCats {
-		categoryID, err := getCategoryIDByName(categoryName)
-		if err != nil {
-			continue
-		}
-		utils.GlobalDB.Exec(`
+    // Add categories
+    for _, categoryName := range data.SelectedCats {
+        categoryID, err := getCategoryIDByName(categoryName)
+        if err != nil {
+            continue
+        }
+        utils.GlobalDB.Exec(`
             INSERT INTO post_categories (post_id, category_id) 
             VALUES (?, ?)
         `, postID, categoryID)
-	}
+    }
 
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+    http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func getCategoryIDByName(name string) (int, error) {
