@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	handlers "forum/authentication"
 	"forum/controllers"
@@ -49,8 +50,36 @@ func main() {
 	http.Handle("/categories", categoryHandler)
 	http.Handle("/category", categoryHandler)
 
-	// Static file serving
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	// Static file protection middleware
+	staticHandler := http.StripPrefix("/static/", http.FileServer(http.Dir("static")))
+	protectedStatic := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Block directory access
+		if r.URL.Path == "/static" || r.URL.Path == "/static/" {
+			utils.RenderErrorPage(w, http.StatusForbidden, "Forbidden")
+			return
+		}
+
+		// Allow only specific file types
+		ext := filepath.Ext(r.URL.Path)
+		allowedExts := map[string]bool{
+			".css":  true,
+			".js":   true,
+			".png":  true,
+			".jpg":  true,
+			".jpeg": true,
+			".gif":  true,
+		}
+
+		if !allowedExts[ext] {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
+		}
+
+		staticHandler.ServeHTTP(w, r)
+	})
+
+	http.Handle("/static/", protectedStatic)
+
 	fmt.Println("Server opened at port 8000...http://localhost:8000/")
 
 	// Start server
