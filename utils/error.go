@@ -25,14 +25,27 @@ const (
 )
 
 func RenderErrorPage(w http.ResponseWriter, code int, message string) {
+	// Set content type before writing status
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	// Set status code after headers but before body
+	w.WriteHeader(code)
+
 	tmpl, err := template.ParseFiles("templates/error.html")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		// Since we already wrote the header, we can't use http.Error here
+		w.Write([]byte("Error loading error page template"))
 		return
 	}
+
 	data := ErrorPageData{
 		Code:    code,
 		Message: message,
 	}
-	tmpl.Execute(w, data)
+
+	if err := tmpl.Execute(w, data); err != nil {
+		// Since we already wrote the header, we can't use http.Error here
+		w.Write([]byte("Error rendering error page"))
+		return
+	}
 }
