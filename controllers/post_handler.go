@@ -228,7 +228,7 @@ func (ph *PostHandler) getAllPosts() ([]utils.Post, error) {
         JOIN users u ON p.user_id = u.id
         LEFT JOIN post_categories pc ON p.id = pc.post_id
         LEFT JOIN categories c ON pc.category_id = c.id
-        ORDER BY p.post_at DESC
+        ORDER BY datetime(p.post_at) DESC
     `)
 	if err != nil {
 		return nil, err
@@ -274,7 +274,7 @@ func (ph *PostHandler) getAllPosts() ([]utils.Post, error) {
 			post.CategoryName = nil
 		}
 
-		post.PostTime = FormatTimeAgo(postTime.Local())
+		post.PostTime = FormatTimeAgo(postTime)
 
 		postMap[post.ID] = post
 	}
@@ -341,7 +341,7 @@ func (ph *PostHandler) handleCreatePost(w http.ResponseWriter, r *http.Request) 
     }
 
     // Create post
-    currentTime := time.Now().Format("2006-01-02 15:04:05")
+    currentTime := time.Now()
     stmt, err := utils.GlobalDB.Prepare(`
         INSERT INTO posts (user_id, title, content, imagepath, post_at)
         VALUES (?, ?, ?, ?, ?)

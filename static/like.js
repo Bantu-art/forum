@@ -1,13 +1,11 @@
 function handleReaction(event) {
     event.preventDefault();
-
-    event.stopPropagation(); // Prevent post link click when clicking like/dislike
+    event.stopPropagation();
 
     const button = event.currentTarget;
     const postID = button.getAttribute("data-post-id");
     const action = button.getAttribute("data-action");
 
-    // Check if user is logged in by looking for session cookie
     const hasSession = document.cookie.includes('session_token=');
     if (!hasSession) {
         window.location.href = '/signin';
@@ -29,27 +27,29 @@ function handleReaction(event) {
     })
     .then(response => {
         if (response.status === 401) {
-
             window.location.href = '/signin';
-            throw new Error('Please log in to react to posts');
+            return Promise.reject('Unauthorized');
         }
+        
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            window.location.href = '/signin';
+            return Promise.reject('Invalid response type');
+        }
+        
         return response.json();
     })
     .then(data => {
-        if (data.error) {
-            throw new Error(data.error);
-        }
-        const likesElement = document.getElementById(`likes-${postID}`);
-        const dislikesElement = document.getElementById(`dislikes-${postID}`);
-        
-        if (likesElement && dislikesElement) {
-            likesElement.textContent = data.likes;
-            dislikesElement.textContent = data.dislikes;
+        if (data) {
+            document.getElementById(`likes-${postID}`).textContent = data.likes;
+            document.getElementById(`dislikes-${postID}`).textContent = data.dislikes;
         }
     })
     .catch(error => {
-        console.error("Error:", error);
-        alert(error.message);
+        console.error('Error:', error);
+        if (!window.location.pathname.includes('/signin')) {
+            window.location.href = '/signin';
+        }
     });
 }
 
