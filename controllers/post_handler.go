@@ -66,11 +66,38 @@ func (ph *PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	case "/":
 		if r.Method == http.MethodGet {
-			if r.URL.Query().Get("id") != "" {
+			// Check if id parameter exists and get its value
+			postIDStr := r.URL.Query().Get("id")
+			
+			// If id parameter exists (non-empty), handle single post
+			if postIDStr != "" {
+				postIDStr = strings.TrimSpace(postIDStr)
+				
+				// Return error if ID param is empty after trim
+				if postIDStr == "" {
+					utils.RenderErrorPage(w, http.StatusNotFound, "Post ID cannot be empty")
+					return
+				}
+	
+				// Validate post ID format and value
+				postID, err := strconv.Atoi(postIDStr)
+				if err != nil || postID <= 0 {
+					utils.RenderErrorPage(w, http.StatusNotFound, "Invalid post ID")
+					return
+				}
+	
+				// Check if post exists
+				var exists bool
+				if err := utils.GlobalDB.QueryRow("SELECT EXISTS(SELECT 1 FROM posts WHERE id = ?)", postID).Scan(&exists); err != nil || !exists {
+					utils.RenderErrorPage(w, http.StatusNotFound, "Post not found")
+					return
+				}
+	
 				ph.handleSinglePost(w, r)
-			} else {
-				ph.handleGetPosts(w, r)
+				return
 			}
+			// Handle homepage if no id parameter
+			ph.handleGetPosts(w, r)
 		}
 	case "/comment":
 		if r.Method == http.MethodPost {
@@ -399,6 +426,7 @@ func FormatTimeAgo(t time.Time) string {
 
 func (ph *PostHandler) handleSinglePost(w http.ResponseWriter, r *http.Request) {
 	postIDStr := r.URL.Query().Get("id")
+	fmt.Println(postIDStr)	
 
 	if postIDStr == "" {
 		http.Error(w, "Post ID is required", http.StatusBadRequest)
@@ -408,20 +436,20 @@ func (ph *PostHandler) handleSinglePost(w http.ResponseWriter, r *http.Request) 
 	postID, err := strconv.ParseInt(postIDStr, 10, 64)
 	if err != nil {
 		log.Printf("Invalid post ID: %v", err)
-		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrPostNotFound)
+		utils.RenderErrorPage(w, http.StatusBadRequest, utils.ErrPostNotFound)
 		return
 	}
 
 	post, comments, err := ph.getPostByID(postID)
 	if err != nil {
 		log.Printf("Error fetching post: %v", err)
-		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrPostNotFound)
+		utils.RenderErrorPage(w, http.StatusBadRequest, utils.ErrPostNotFound)
 		return
 	}
 
 	if post == nil {
 		log.Printf("Post not found: %d", postID)
-		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrPostNotFound)
+		utils.RenderErrorPage(w, http.StatusBadRequest, utils.ErrPostNotFound)
 		return
 	}
 

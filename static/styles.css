@@ -339,7 +339,7 @@ body {
     margin: 0 0 12px 0;
 }
 
-.post-content-link {
+.post-content-link, .logo-link {
   color: black;
 }
 

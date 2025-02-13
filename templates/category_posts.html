@@ -22,9 +22,7 @@
                 <button id="create-post-btn" class="btn btn-primary" onclick="window.location.href='/create'">
                     <i class="fas fa-plus"></i> 
                 </button>
-                <button id="theme-toggle" class="theme-toggle">
-                    <i class="fas fa-moon"></i>
-                </button>
+               
                 {{if not .IsLoggedIn}}
                     <button class="btn btn-outline" onclick="window.location.href='/signin'">
                         <i class="fas fa-sign-in-alt"></i> Login

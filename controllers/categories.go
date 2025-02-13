@@ -27,15 +27,30 @@ func (ch *CategoryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	case "/category":
 		if r.Method == http.MethodGet {
-			categoryName := r.URL.Query().Get("name")
-			if categoryName == "" {
-				utils.RenderErrorPage(w, http.StatusBadRequest, utils.ErrInvalidForm)
-				return
-			}
-			ch.handleGetPostsByCategoryName(w, r, categoryName)
-		} else {
-			utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
-		}
+            categoryName := r.URL.Query().Get("name")
+            if categoryName == "" {
+                utils.RenderErrorPage(w, http.StatusBadRequest, utils.ErrInvalidForm)
+                return
+            }
+
+            // Check if category exists
+            var exists bool
+            err := utils.GlobalDB.QueryRow("SELECT EXISTS(SELECT 1 FROM categories WHERE name = ?)", 
+                categoryName).Scan(&exists)
+            if err != nil {
+                log.Printf("Error checking category existence: %v", err)
+                utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrInternalServer)
+                return
+            }
+            if !exists {
+                utils.RenderErrorPage(w, http.StatusNotFound, "Category not found")
+                return
+            }
+
+            ch.handleGetPostsByCategoryName(w, r, categoryName)
+        } else {
+            utils.RenderErrorPage(w, http.StatusMethodNotAllowed, utils.ErrMethodNotAllowed)
+        }
 	default:
 		utils.RenderErrorPage(w, http.StatusNotFound, utils.ErrNotFound)
 	}

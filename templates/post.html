@@ -22,9 +22,6 @@
                 <button id="create-post-btn" class="btn btn-primary" onclick="window.location.href='/create'">
                     <i class="fas fa-plus"></i> Create Post
                 </button>
-                <button id="theme-toggle" class="theme-toggle">
-                    <i class="fas fa-moon"></i>
-                </button>
                 {{if not .IsLoggedIn}}
                 <button class="btn btn-outline" onclick="window.location.href='/signin'">
                     <i class="fas fa-sign-in-alt"></i> Login
@@ -161,7 +158,7 @@
                     </div>
                     {{if eq .UserID $.CurrentUserID}}
                     <div class="comment-actions">
-                        <button onclick="editComment({{.ID}})" class="edit-btn">
+                        <button onclick="editComment('{{.ID}}')" class="edit-btn">
                             <i class="fas fa-edit"></i> Edit
                         </button>
                         <form class="delete-comment-form" method="POST" action="/deletecomment" style="display: inline;">

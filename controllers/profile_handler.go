@@ -67,11 +67,11 @@ func (ph *ProfileHandler) displayUserProfile(w http.ResponseWriter, targetUserID
     `, targetUserID).Scan(&profile.UserID, &profile.Username, &profile.Email, &profile.ProfilePic)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			http.Error(w, "Profile not found", http.StatusNotFound)
-			return
+utils.RenderErrorPage(w, http.StatusNotFound, utils.ErrNotFound)	
+		return
 		}
 		log.Printf("Error fetching profile: %v", err)
-		http.Error(w, "Error loading profile", http.StatusInternalServerError)
+		utils.RenderErrorPage(w, http.StatusNotFound, utils.ErrNotFound)	
 		return
 	}
 
@@ -81,7 +81,7 @@ func (ph *ProfileHandler) displayUserProfile(w http.ResponseWriter, targetUserID
 	tmpl, err := template.ParseFiles("templates/profile.html")
 	if err != nil {
 		log.Printf("Error parsing template: %v", err)
-		http.Error(w, "Error loading template", http.StatusInternalServerError)
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrInternalServer)	
 		return
 	}
 
