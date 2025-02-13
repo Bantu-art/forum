@@ -339,6 +339,10 @@ body {
     margin: 0 0 12px 0;
 }
 
+.post-content-link {
+  color: black;
+}
+
 .post-image {
     width: 100%;
     max-height: 600px;
