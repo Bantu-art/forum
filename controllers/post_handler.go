@@ -426,7 +426,6 @@ func FormatTimeAgo(t time.Time) string {
 
 func (ph *PostHandler) handleSinglePost(w http.ResponseWriter, r *http.Request) {
 	postIDStr := r.URL.Query().Get("id")
-	fmt.Println(postIDStr)	
 
 	if postIDStr == "" {
 		http.Error(w, "Post ID is required", http.StatusBadRequest)
