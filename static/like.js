@@ -1,19 +1,10 @@
 function handleReaction(event) {
     event.preventDefault();
-
-    event.stopPropagation(); // Prevent post link click when clicking like/dislike
+    event.stopPropagation();
 
     const button = event.currentTarget;
     const postID = button.getAttribute("data-post-id");
     const action = button.getAttribute("data-action");
-
-    // Check if user is logged in by looking for session cookie
-    const hasSession = document.cookie.includes('session_token=');
-    if (!hasSession) {
-        window.location.href = '/signin';
-        return;
-    }
-
     const like = action === "like" ? 1 : 0;
 
     fetch("/react", {
@@ -28,10 +19,17 @@ function handleReaction(event) {
         credentials: 'include'
     })
     .then(response => {
-        if (response.status === 401) {
-
+        // First check if the response is JSON
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            // Not JSON, probably redirected to signin page
             window.location.href = '/signin';
-            throw new Error('Please log in to react to posts');
+            throw new Error('Session expired. Please sign in again.');
+        }
+        
+        if (response.status === 401) {
+            window.location.href = '/signin';
+            throw new Error('Please sign in to react to posts');
         }
         return response.json();
     })
@@ -49,26 +47,19 @@ function handleReaction(event) {
     })
     .catch(error => {
         console.error("Error:", error);
-        alert(error.message);
+        if (!error.message.includes("Please sign in")) {
+            alert(error.message);
+        }
     });
 }
-
 // Handler for comment reactions
 function handleCommentReaction(event) {
     event.preventDefault();
-    event.stopPropagation(); // Prevent any unwanted propagation
+    event.stopPropagation();
 
     const button = event.currentTarget;
     const commentID = button.getAttribute("data-comment-id");
     const action = button.getAttribute("data-action");
-
-    // Check if user is logged in by looking for session cookie
-    const hasSession = document.cookie.includes('session_token=');
-    if (!hasSession) {
-        window.location.href = '/signin';
-        return;
-    }
-
     const like = action === "like" ? 1 : 0;
 
     fetch("/commentreact", {
@@ -80,12 +71,18 @@ function handleCommentReaction(event) {
             comment_id: parseInt(commentID),
             like: like,
         }),
-        credentials: 'include' // Ensure cookies are sent
+        credentials: 'include'
     })
     .then(response => {
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            window.location.href = '/signin';
+            throw new Error('Session expired. Please sign in again.');
+        }
+
         if (response.status === 401) {
             window.location.href = '/signin';
-            throw new Error('Please log in to react to comments');
+            throw new Error('Please sign in to react to comments');
         }
         return response.json();
     })
@@ -93,7 +90,6 @@ function handleCommentReaction(event) {
         if (data.error) {
             throw new Error(data.error);
         }
-        // Update the comment's like and dislike counts on the page
         const likesElement = document.getElementById(`comment-likes-${commentID}`);
         const dislikesElement = document.getElementById(`comment-dislikes-${commentID}`);
         
@@ -104,10 +100,11 @@ function handleCommentReaction(event) {
     })
     .catch(error => {
         console.error("Error:", error);
-        alert(error.message);
+        if (!error.message.includes("Please sign in")) {
+            alert(error.message);
+        }
     });
 }
-
 // Comment editing functionality
 function editComment(commentId) {
     const contentDiv = document.getElementById(`comment-content-${commentId}`);

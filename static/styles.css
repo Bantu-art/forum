@@ -437,6 +437,7 @@ body {
     padding-top: 15px;
 }
 
+
 .comment-form-container {
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(800px);
@@ -653,7 +654,7 @@ body {
     background-color: rgba(0, 0, 0, 0.1);
   }
   
-  .comment-reaction-buttons .like-btn:hover i {
+  .comment-reaction-buttons .comment-like-btn:hover i {
     color: #ed4956;
   }
   
