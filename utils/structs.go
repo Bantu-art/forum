@@ -54,7 +54,7 @@ type Session struct {
 }
 
 type ErrorPageData struct {
-	Code int
+	Code    int
 	Message string
 }
 

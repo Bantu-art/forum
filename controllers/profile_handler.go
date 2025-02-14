@@ -54,7 +54,6 @@ func (ph *ProfileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Display profile
 	ph.displayUserProfile(w, targetUserID, currentUserID, isLoggedIn)
 }
 
@@ -67,11 +66,11 @@ func (ph *ProfileHandler) displayUserProfile(w http.ResponseWriter, targetUserID
     `, targetUserID).Scan(&profile.UserID, &profile.Username, &profile.Email, &profile.ProfilePic)
 	if err != nil {
 		if err == sql.ErrNoRows {
-utils.RenderErrorPage(w, http.StatusNotFound, utils.ErrNotFound)	
-		return
+			utils.RenderErrorPage(w, http.StatusNotFound, utils.ErrNotFound)
+			return
 		}
 		log.Printf("Error fetching profile: %v", err)
-		utils.RenderErrorPage(w, http.StatusNotFound, utils.ErrNotFound)	
+		utils.RenderErrorPage(w, http.StatusNotFound, utils.ErrNotFound)
 		return
 	}
 
@@ -81,7 +80,7 @@ utils.RenderErrorPage(w, http.StatusNotFound, utils.ErrNotFound)
 	tmpl, err := template.ParseFiles("templates/profile.html")
 	if err != nil {
 		log.Printf("Error parsing template: %v", err)
-		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrInternalServer)	
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrInternalServer)
 		return
 	}
 
@@ -97,12 +96,12 @@ func (ph *ProfileHandler) handleProfileUpdate(w http.ResponseWriter, r *http.Req
 	}
 
 	file, header, err := r.FormFile("profile_pic")
-if err != nil {
-    log.Printf("Error getting profile pic: %v", err)
-    utils.RenderErrorPage(w, http.StatusBadRequest, utils.ErrFileUpload)
-    return
-}
-defer file.Close()
+	if err != nil {
+		log.Printf("Error getting profile pic: %v", err)
+		utils.RenderErrorPage(w, http.StatusBadRequest, utils.ErrFileUpload)
+		return
+	}
+	defer file.Close()
 
 	// Validate file type
 	if !isValidImageType(header.Header.Get("Content-Type")) {
@@ -120,11 +119,11 @@ defer file.Close()
 
 	// Process new image
 	imagePath, err := ph.imageHandler.ProcessImage(file, header)
-if err != nil {
-    log.Printf("Error processing image: %v", err)
-    utils.RenderErrorPage(w, http.StatusBadRequest, err.Error())
-    return
-}
+	if err != nil {
+		log.Printf("Error processing image: %v", err)
+		utils.RenderErrorPage(w, http.StatusBadRequest, err.Error())
+		return
+	}
 
 	log.Printf("New image path: %s", imagePath)
 
@@ -137,7 +136,7 @@ if err != nil {
 	if err != nil {
 		log.Printf("Error updating profile pic in database: %v", err)
 		http.Error(w, "Error updating profile", http.StatusInternalServerError)
-		os.Remove(imagePath) // Clean up new image if database update fails
+		os.Remove(imagePath)
 		return
 	}
 
@@ -152,9 +151,7 @@ if err != nil {
 			log.Printf("Error deleting old profile pic: %v", err)
 		}
 	}
-	// fmt.Println("userID: %s", userID)
 
-	// Redirect back to profile page with userID
 	http.Redirect(w, r, "/profile/"+userID, http.StatusSeeOther)
 }
 

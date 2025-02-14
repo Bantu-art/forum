@@ -18,7 +18,6 @@ type SignInData struct {
 
 func SignInHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.ParseFiles("templates/signin.html")
-	// If there’s an error in loading the template (e.g. file is missing)
 	if err != nil {
 		utils.RenderErrorPage(w, http.StatusNotFound, http.StatusText(http.StatusNotFound))
 		log.Printf("Error loading template: %v", err)
@@ -33,11 +32,9 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		data := SignInData{}
 
-		// get form values
 		username := r.FormValue("username")
 		password := r.FormValue("password")
 
-		// validate input
 		if username == "" {
 			data.UsernameError = "Username is required"
 		}
@@ -59,20 +56,20 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 			WHERE username = ?
 		`, username).Scan(&user.ID, &user.Password)
 		if err != nil {
-        data := struct {
-            GeneralError string
-            Username     string
-        }{
-            GeneralError: "Invalid username or password",
-            Username:     username,
-        }
-        tmpl, _ := template.ParseFiles("templates/signin.html")
-        tmpl.Execute(w, data)
-        if err != sql.ErrNoRows {
-            log.Printf("Error querying database: %v", err)
-        }
-        return
-    }
+			data := struct {
+				GeneralError string
+				Username     string
+			}{
+				GeneralError: "Invalid username or password",
+				Username:     username,
+			}
+			tmpl, _ := template.ParseFiles("templates/signin.html")
+			tmpl.Execute(w, data)
+			if err != sql.ErrNoRows {
+				log.Printf("Error querying database: %v", err)
+			}
+			return
+		}
 
 		if !utils.CheckPasswordsHash(password, user.Password) {
 			data.GeneralError = "Invalid username or password"

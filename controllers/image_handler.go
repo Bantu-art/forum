@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	maxUploadSize = 10 << 20 // 10MB
+	maxUploadSize = 10 << 20
 	uploadDir     = "static/uploads"
 )
 
@@ -23,7 +23,6 @@ type ImageHandler struct {
 	uploadPath string
 }
 
-// NewImageHandler creates a new image handler
 func NewImageHandler() *ImageHandler {
 	// Create upload directory if it doesn't exist
 	if err := os.MkdirAll(uploadDir, 0o755); err != nil {
@@ -56,10 +55,9 @@ func (ih *ImageHandler) ProcessImage(file multipart.File, header *multipart.File
 	defer dst.Close()
 
 	if _, err = io.Copy(dst, file); err != nil {
-		os.Remove(filePath) // Clean up on error
+		os.Remove(filePath)
 		return "", err
 	}
 
-	// Return web-accessible path
 	return "/static/uploads/" + newFileName, nil
 }

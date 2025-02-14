@@ -11,7 +11,6 @@ import (
 )
 
 func CreatedPosts(w http.ResponseWriter, r *http.Request) {
-	// Set content type header at the start
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	// Check session
@@ -28,7 +27,6 @@ func CreatedPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Render template
 	if err := renderCreatedTemplateForPosts(w, posts, userID); err != nil {
 		log.Printf("Error rendering template: %v", err)
 		return
@@ -36,7 +34,6 @@ func CreatedPosts(w http.ResponseWriter, r *http.Request) {
 }
 
 func LikedPosts(w http.ResponseWriter, r *http.Request) {
-	// Set content type header at the start
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	// Check session
@@ -53,7 +50,6 @@ func LikedPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Render template for liked posts
 	if err := renderCreatedTemplateForLikes(w, posts, userID); err != nil {
 		log.Printf("Error rendering template: %v", err)
 		return
@@ -184,7 +180,6 @@ func fetchUserPostsForLikes(userID string) ([]utils.Post, error) {
 }
 
 func renderCreatedTemplateForPosts(w http.ResponseWriter, posts []utils.Post, userID string) error {
-	// Cache templates during init() in production
 	tmpl, err := template.ParseFiles("templates/created.html")
 	if err != nil {
 		http.Error(w, "Error loading template", http.StatusInternalServerError)
@@ -203,7 +198,6 @@ func renderCreatedTemplateForPosts(w http.ResponseWriter, posts []utils.Post, us
 }
 
 func renderCreatedTemplateForLikes(w http.ResponseWriter, posts []utils.Post, userID string) error {
-	// Cache templates during init() in production
 	tmpl, err := template.ParseFiles("templates/liked.html")
 	if err != nil {
 		http.Error(w, "Error loading template", http.StatusInternalServerError)
