@@ -50,7 +50,7 @@ A modern web forum built with Go that enables user communication through posts, 
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/Bantu-art/forum.git
+git clone https://learn.zone01kisumu.ke/git/bbantu/forum.git
 cd forum
 ```
 
@@ -161,7 +161,6 @@ The application uses SQLite with the following main tables:
 
 - Password encryption using bcrypt
 - Session management with UUID
-- CSRF protection
 - Input validation and sanitization
 - Secure cookie handling
 
