@@ -67,11 +67,11 @@ func (ph *ProfileHandler) displayUserProfile(w http.ResponseWriter, targetUserID
     `, targetUserID).Scan(&profile.UserID, &profile.Username, &profile.Email, &profile.ProfilePic)
 	if err != nil {
 		if err == sql.ErrNoRows {
-utils.RenderErrorPage(w, http.StatusNotFound, utils.ErrNotFound)	
-		return
+			utils.RenderErrorPage(w, http.StatusNotFound, utils.ErrNotFound)
+			return
 		}
 		log.Printf("Error fetching profile: %v", err)
-		utils.RenderErrorPage(w, http.StatusNotFound, utils.ErrNotFound)	
+		utils.RenderErrorPage(w, http.StatusNotFound, utils.ErrNotFound)
 		return
 	}
 
@@ -81,7 +81,7 @@ utils.RenderErrorPage(w, http.StatusNotFound, utils.ErrNotFound)
 	tmpl, err := template.ParseFiles("templates/profile.html")
 	if err != nil {
 		log.Printf("Error parsing template: %v", err)
-		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrInternalServer)	
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrInternalServer)
 		return
 	}
 
@@ -90,20 +90,45 @@ utils.RenderErrorPage(w, http.StatusNotFound, utils.ErrNotFound)
 
 func (ph *ProfileHandler) handleProfileUpdate(w http.ResponseWriter, r *http.Request, userID string) {
 	// Set max upload size - 5MB
+	data := struct {
+		ErrorMessage  string
+		IsLoggedIn    bool
+		IsOwnProfile  bool
+		CurrentUserID string
+	}{
+		IsLoggedIn:    true,
+		IsOwnProfile:  true,
+		CurrentUserID: userID,
+	}
+
+	tmpl, err := template.ParseFiles("templates/profile.html")
+	if err != nil {
+		log.Printf("Error parsing template: %v", err)
+		utils.RenderErrorPage(w, http.StatusInternalServerError, utils.ErrInternalServer)
+		return
+	}
+
+	// Check file size before processing
 	if err := r.ParseMultipartForm(20 << 20); err != nil {
-		log.Printf("Error parsing form: %v", err)
-		http.Error(w, "Error processing form", http.StatusBadRequest)
+		data.ErrorMessage = "File size too large. Maximum size is 20MB"
+		tmpl.Execute(w, data)
 		return
 	}
 
 	file, header, err := r.FormFile("profile_pic")
-if err != nil {
-    log.Printf("Error getting profile pic: %v", err)
-    utils.RenderErrorPage(w, http.StatusBadRequest, utils.ErrFileUpload)
-    return
-}
-defer file.Close()
+	if err != nil {
+		data.ErrorMessage = "Error uploading image: " + err.Error()
+		tmpl.Execute(w, data)
+		return
+	}
+	defer file.Close()
 
+	// Validate file size explicitly
+	if header.Size > 20<<20 {
+		data.ErrorMessage = "Image size must be less than 20MB"
+		tmpl.Execute(w, data)
+		return
+	}
 	// Validate file type
 	if !isValidImageType(header.Header.Get("Content-Type")) {
 		log.Printf("Invalid file type: %s", header.Header.Get("Content-Type"))
@@ -120,11 +145,11 @@ defer file.Close()
 
 	// Process new image
 	imagePath, err := ph.imageHandler.ProcessImage(file, header)
-if err != nil {
-    log.Printf("Error processing image: %v", err)
-    utils.RenderErrorPage(w, http.StatusBadRequest, err.Error())
-    return
-}
+	if err != nil {
+		log.Printf("Error processing image: %v", err)
+		utils.RenderErrorPage(w, http.StatusBadRequest, err.Error())
+		return
+	}
 
 	log.Printf("New image path: %s", imagePath)
 
