@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 )
 
-const MaxFileSize = 10 << 20 // 10MB
+const MaxFileSize = 20 << 20 // 20MB
 
 var ValidImageTypes = map[string]bool{
 	"image/jpeg": true,

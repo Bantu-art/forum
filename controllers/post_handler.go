@@ -302,7 +302,7 @@ func (ph *PostHandler) handleCreatePost(w http.ResponseWriter, r *http.Request) 
         CurrentUserID: userID,
     }
 
-    if err := r.ParseMultipartForm(10 << 20); err != nil {
+    if err := r.ParseMultipartForm(20 << 20); err != nil {
         data.ErrorMessage = "File size too large. Maximum size is 10MB"
         tmpl.Execute(w, data)
         return
@@ -326,7 +326,7 @@ func (ph *PostHandler) handleCreatePost(w http.ResponseWriter, r *http.Request) 
         defer file.Close()
         
         // Check file size
-        if header.Size > 10<<20 { // 10 MB
+        if header.Size > 20<<20 { // 20 MB
             data.ErrorMessage = "Image size must be less than 10MB"
             tmpl.Execute(w, data)
             return

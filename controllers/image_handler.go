@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	maxUploadSize = 10 << 20 // 10MB
+	maxUploadSize = 20 << 20 // 20MB
 	uploadDir     = "static/uploads"
 )
 

@@ -90,7 +90,7 @@ utils.RenderErrorPage(w, http.StatusNotFound, utils.ErrNotFound)
 
 func (ph *ProfileHandler) handleProfileUpdate(w http.ResponseWriter, r *http.Request, userID string) {
 	// Set max upload size - 5MB
-	if err := r.ParseMultipartForm(5 << 20); err != nil {
+	if err := r.ParseMultipartForm(20 << 20); err != nil {
 		log.Printf("Error parsing form: %v", err)
 		http.Error(w, "Error processing form", http.StatusBadRequest)
 		return
