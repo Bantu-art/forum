@@ -1,0 +1,67 @@
+name: Deploy Forum to EC2
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+    
+    - name: Deploy CloudFormation stack
+      run: |
+        aws cloudformation deploy \
+          --template-file cloudformation/forum-infrastructure.yml \
+          --stack-name forum-app \
+          --capabilities CAPABILITY_IAM
+    
+    - name: Get EC2 instance ID
+      id: get-instance
+      run: |
+        INSTANCE_ID=$(aws cloudformation describe-stacks \
+          --stack-name forum-app \
+          --query 'Stacks[0].Outputs[?OutputKey==`InstanceId`].OutputValue' \
+          --output text)
+        echo "instance_id=$INSTANCE_ID" >> $GITHUB_OUTPUT
+    
+    - name: Deploy application via SSM
+      run: |
+        # Create deployment package
+        zip -r forum-app.zip . -x "*.git*" "*.zip"
+        
+        # Upload to S3 (create bucket if needed)
+        aws s3 mb s3://forum-deploy-${{ github.run_id }} || true
+        aws s3 cp forum-app.zip s3://forum-deploy-${{ github.run_id }}/
+        
+        # Deploy via SSM
+        aws ssm send-command \
+          --instance-ids ${{ steps.get-instance.outputs.instance_id }} \
+          --document-name "AWS-RunShellScript" \
+          --parameters 'commands=[
+            "cd /home/ec2-user",
+            "aws s3 cp s3://forum-deploy-${{ github.run_id }}/forum-app.zip .",
+            "unzip -o forum-app.zip -d forum/",
+            "cd forum",
+            "sudo systemctl stop forum || true",
+            "go build -o forum main.go",
+            "sudo cp forum /usr/local/bin/",
+            "sudo systemctl start forum",
+            "sudo systemctl enable forum"
+          ]' \
+          --wait-for-completion
+        
+        # Cleanup
+        aws s3 rm s3://forum-deploy-${{ github.run_id }}/forum-app.zip
+        aws s3 rb s3://forum-deploy-${{ github.run_id }}
